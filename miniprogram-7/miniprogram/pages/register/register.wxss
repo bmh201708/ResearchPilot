@@ -1,0 +1,189 @@
+/* pages/register/register.wxss */
+.page {
+    min-height: 100vh;
+    padding: 80rpx 48rpx 60rpx;
+    box-sizing: border-box;
+    background:
+      linear-gradient(#f0f0f0 1rpx, transparent 1rpx),
+      linear-gradient(90deg, #f0f0f0 1rpx, transparent 1rpx),
+      linear-gradient(135deg, #fff7e6, #fdfcf7);
+    background-size: 24rpx 24rpx, 24rpx 24rpx, auto;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* ===== 背景光斑 ===== */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90rpx);
+    opacity: 0.2;
+  }
+  
+  .sunny {
+    width: 420rpx;
+    height: 420rpx;
+    background: #facc15;
+    top: -120rpx;
+    left: -120rpx;
+  }
+  
+  .orange {
+    width: 380rpx;
+    height: 380rpx;
+    background: #fb923c;
+    bottom: -140rpx;
+    right: -160rpx;
+  }
+  
+  .pink {
+    width: 300rpx;
+    height: 300rpx;
+    background: #f472b6;
+    top: 40%;
+    right: -140rpx;
+  }
+  
+  /* ===== 状态栏 ===== */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 24rpx;
+    color: #6b7280;
+    margin-bottom: 40rpx;
+  }
+  
+  .icons text {
+    margin-left: 10rpx;
+  }
+  
+  /* ===== 浮动图标 ===== */
+  .float-icon {
+    position: absolute;
+    opacity: 0.7;
+    font-size: 48rpx;
+  }
+  
+  .science {
+    top: 160rpx;
+    right: 40rpx;
+  }
+  
+  .edit {
+    top: 220rpx;
+    left: 40rpx;
+  }
+  
+  /* ===== Header ===== */
+  .header {
+    text-align: center;
+    margin-bottom: 48rpx;
+  }
+  
+  .logo {
+    width: 140rpx;
+    height: 140rpx;
+    background: #fff;
+    border-radius: 36rpx;
+    margin: 0 auto 32rpx;
+    box-shadow: 0 30rpx 60rpx rgba(0,0,0,0.1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .cap {
+    font-size: 56rpx;
+  }
+  
+  .spark {
+    position: absolute;
+    top: -12rpx;
+    right: -12rpx;
+    background: #fff;
+    border-radius: 50%;
+    padding: 6rpx;
+  }
+  
+  .title {
+    font-size: 48rpx;
+    font-weight: 700;
+    color: #111827;
+  }
+  
+  .subtitle {
+    margin-top: 16rpx;
+    font-size: 26rpx;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+  
+  /* ===== 表单 ===== */
+  .form {
+    margin-top: 40rpx;
+  }
+  
+  .field {
+    margin-bottom: 32rpx;
+  }
+  
+  .label {
+    font-size: 26rpx;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12rpx;
+    display: block;
+  }
+  
+  .input-box {
+    background: #fff;
+    border-radius: 999rpx;
+    padding: 28rpx 32rpx;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 16rpx 30rpx rgba(0,0,0,0.06);
+  }
+  
+  .icon {
+    margin-right: 16rpx;
+    opacity: 0.6;
+  }
+  
+  input {
+    flex: 1;
+    font-size: 28rpx;
+  }
+  
+  /* ===== 按钮 ===== */
+  .btn {
+    height: 96rpx;
+    border-radius: 999rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    font-weight: 700;
+  }
+  
+  .primary {
+    background: linear-gradient(90deg, #facc15, #fb923c);
+    color: #fff;
+    box-shadow: 0 26rpx 50rpx rgba(250,204,21,0.45);
+    margin-top: 24rpx;
+  }
+  
+  /* ===== 登录提示 ===== */
+  .login-tip {
+    margin-top: 40rpx;
+    text-align: center;
+    font-size: 26rpx;
+    color: #6b7280;
+  }
+  
+  .login-link {
+    color: #fb923c;
+    font-weight: 700;
+    margin-left: 6rpx;
+  }
+  

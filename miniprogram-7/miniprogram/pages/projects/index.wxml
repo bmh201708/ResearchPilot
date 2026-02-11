@@ -1,0 +1,107 @@
+<!--pages/projects/index.wxml-->
+<view class="container">
+  <view class="nav-bar">
+    <view class="brand">
+      <view class="brand-icon">
+        <view class="calendar-icon"></view>
+      </view>
+      <text class="brand-text">TRACKER</text>
+    </view>
+    <view class="menu-btn">
+      <view class="line line-1"></view>
+      <view class="line line-2"></view>
+      <view class="line line-3"></view>
+    </view>
+  </view>
+
+  <view class="page-header">
+    <view class="title-line">Conference</view>
+    <view class="title-line highlight">Deadlines</view>
+  </view>
+
+  <view class="card featured-card">
+    <view class="card-header">
+      <view class="header-left">
+        <view class="logo-box cvpr-logo">
+          <text>CVPR</text>
+        </view>
+        <view class="conference-info">
+          <text class="conf-name">CVPR 2024</text>
+          <text class="conf-loc">📍 Seattle, USA</text>
+        </view>
+      </view>
+      <view class="fire-badge">🔥</view>
+    </view>
+    
+    <view class="deadline-row">
+      <text class="label">SUBMISSION DEADLINE</text>
+      <text class="days-left">2 Days Left</text>
+    </view>
+
+    <view class="progress-track">
+      <view class="progress-bar" style="width: 85%;"></view>
+    </view>
+
+    <view class="note-box">
+      <text class="note-label">Note:</text> Abstract registration is closed. Full paper submission only.
+    </view>
+  </view>
+
+  <view class="grid-container">
+    <view class="card grid-card">
+      <view class="card-top-row">
+        <view class="icon-circle teal-icon"></view>
+        <view class="tag">AI & ML</view>
+      </view>
+      <view class="card-title">NeurIPS</view>
+      <view class="card-subtitle">Dec 10 - 16, 2024</view>
+      <view class="dashed-line"></view>
+      <view class="card-footer">
+        <text class="footer-tag teal-text">ABSTRACT</text>
+        <text class="footer-date">May 15</text>
+      </view>
+    </view>
+
+    <view class="card grid-card">
+      <view class="banner-box pink-banner">
+        <text>HCI</text>
+        <view class="year-tag">CHI '25</view>
+      </view>
+      <view class="card-content-pad">
+        <view class="card-title">CHI</view>
+        <view class="card-title-sub">Conference</view>
+        <view class="card-subtitle">🌎 Yokohama, JP</view>
+        <view class="card-footer-pill pink-bg">
+          <text>Sept 12</text>
+          <text>📅</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card grid-card orange-card">
+      <view class="white-icon">🚀</view>
+      <view class="orange-content">
+        <view class="card-title white-text">ICLR</view>
+        <view class="card-subtitle white-text-o">ACCEPTANCE</view>
+        <view class="big-percent">28%</view>
+      </view>
+    </view>
+
+    <view class="card grid-card">
+      <view class="card-top-row">
+        <view class="icon-circle gray-icon"></view>
+        <view class="bookmark-icon">🔖</view>
+      </view>
+      <view class="card-title mt-20">AAAI 25</view>
+      <view class="progress-track small-track">
+        <view class="progress-bar teal-bar" style="width: 30%;"></view>
+      </view>
+      <view class="card-subtitle text-right">Reviewing Phase</view>
+    </view>
+
+    <view class="card add-new-card">
+      <view class="plus-circle">+</view>
+      <text>Track New</text>
+    </view>
+  </view>
+</view>

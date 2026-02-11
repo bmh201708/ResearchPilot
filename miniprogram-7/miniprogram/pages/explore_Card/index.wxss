@@ -1,0 +1,269 @@
+/* pages/explore_Card/index.wxss */
+/* 页面通用背景与字体 */
+page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e3faf4 0%, #fdeef2 50%, #fcfaf0 100%) no-repeat fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+  }
+  
+  .container {
+    padding: 40rpx 32rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  /* --- 顶部导航 --- */
+  .nav-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40rpx;
+  }
+  
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+  }
+  
+  .brand-icon {
+    width: 60rpx;
+    height: 60rpx;
+    background-color: #ff85a1; /* 这里是粉色图标背景 */
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .book-icon .line {
+    width: 20rpx;
+    height: 4rpx;
+    background: white;
+    margin: 4rpx 0;
+    border-radius: 2rpx;
+  }
+  
+  .brand-text {
+    font-size: 24rpx;
+    font-weight: 700;
+    letter-spacing: 2rpx;
+    color: #ff85a1;
+  }
+  
+  .icon-btn {
+    width: 80rpx;
+    height: 80rpx;
+    background: white;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.05);
+  }
+  
+  .btn-image {
+    width: 40rpx;
+    height: 40rpx;
+  }
+  
+  /* --- 大标题 --- */
+  .page-header {
+    width: 100%;
+    margin-bottom: 48rpx;
+    text-align: left;
+  }
+  
+  .title-line {
+    font-size: 80rpx;
+    font-weight: 800;
+    color: #1a1b2e;
+    line-height: 1.1;
+  }
+  
+  .highlight {
+    background: linear-gradient(90deg, #38e0c6 0%, #d87ce8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* --- 主卡片 (无歪斜) --- */
+  .main-card {
+    width: 100%;
+    height: 800rpx;
+    background: linear-gradient(135deg, #42dfd8 0%, #b363bb 100%);
+    border-radius: 48rpx;
+    padding: 40rpx;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 30rpx 60rpx rgba(66, 223, 216, 0.3);
+    margin-bottom: 40rpx;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .key-tag {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 12rpx 24rpx;
+    border-radius: 30rpx;
+    color: white;
+    font-size: 20rpx;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+  }
+  
+  .bookmark {
+    width: 80rpx;
+    height: 80rpx;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 32rpx;
+  }
+  
+  .card-body {
+    margin-top: 60rpx;
+  }
+  
+  .main-title {
+    color: white;
+    font-size: 48rpx;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 24rpx;
+  }
+  
+  .sub-desc {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 26rpx;
+    line-height: 1.5;
+  }
+  
+  /* 卡片内部操作面板 */
+  .info-panel {
+    background: white;
+    border-radius: 40rpx;
+    padding: 30rpx;
+    margin-top: 30px;
+  }
+  
+  .panel-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30rpx;
+  }
+  
+  .stat-item {
+    flex: 1;
+  }
+  
+  .divider {
+    width: 2rpx;
+    height: 60rpx;
+    background: #eee;
+    margin: 0 30rpx;
+  }
+  
+  .stat-label {
+    font-size: 18rpx;
+    font-weight: 700;
+    color: #a0a0b0;
+    display: block;
+    margin-bottom: 8rpx;
+  }
+  
+  .stat-value {
+    font-size: 36rpx;
+    font-weight: 800;
+    color: #38e0c6;
+  }
+  
+  .stat-value .unit {
+    font-size: 24rpx;
+    font-weight: 600;
+  }
+  
+  .rating-box {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+  }
+  
+  .progress-mini {
+    width: 120rpx;
+    height: 12rpx;
+    background: #f0f0f5;
+    border-radius: 6rpx;
+    overflow: hidden;
+  }
+  
+  .progress-mini .fill {
+    height: 100%;
+    background: #ff85a1;
+  }
+  
+  .rating-text {
+    font-size: 24rpx;
+    font-weight: 700;
+    color: #ff85a1;
+  }
+  
+  .full-summary-btn {
+    background: #1a1b2e;
+    color: white;
+    height: 90rpx;
+    border-radius: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16rpx;
+    font-size: 24rpx;
+    font-weight: 700;
+  }
+  
+  /* --- 选项卡 --- */
+  .tabs-container {
+    display: flex;
+    gap: 20rpx;
+    width: 100%;
+  }
+  
+  .tab-pill {
+    background: white;
+    padding: 20rpx 36rpx;
+    border-radius: 30rpx;
+    font-size: 24rpx;
+    font-weight: 600;
+    color: #1a1b2e;
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    box-shadow: 0 4rpx 15rpx rgba(0,0,0,0.02);
+  }
+  
+  .tab-pill.active {
+    background: #1a1b2e;
+    color: white;
+  }
+  
+  .dot {
+    width: 10rpx;
+    height: 10rpx;
+    border-radius: 50%;
+  }
+  .pink { background: #ff85a1; }
+  .teal { background: #38e0c6; }

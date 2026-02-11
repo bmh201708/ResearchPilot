@@ -1,0 +1,72 @@
+<!--pages/explore_Card/index.wxml-->
+<view class="container">
+  <view class="nav-bar">
+    <view class="brand">
+      <view class="brand-icon">
+        <view class="book-icon">
+          <view class="line"></view>
+          <view class="line"></view>
+        </view>
+      </view>
+      <text class="brand-text">INSIGHT DIGEST</text>
+    </view>
+    
+<view class="top-btns" bindtap="onSwitchToExplore">
+      <view class="icon-btn">
+        <image class="btn-image" src="/images/explore/change.png" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+
+  <view class="page-header">
+    <view class="title-line">Quick</view>
+    <view class="title-line highlight">Reads</view>
+  </view>
+
+  <view class="main-card" bindtap="onCardClick">
+    <view class="card-header">
+      <view class="key-tag">
+        <text class="star">★</text>
+        <text>KEY INSIGHTS</text>
+      </view>
+      <view class="bookmark">🔖</view>
+    </view>
+
+    <view class="card-body">
+      <view class="main-title">Future of Human-Computer Interaction</view>
+      <text class="sub-desc">A concise summary of emerging trends in HCI, including advancements in haptic feedback, neuro-interfaces, and ambient intelligence,...</text>
+    </view>
+
+    <view class="info-panel">
+      <view class="panel-row">
+        <view class="stat-item">
+          <text class="stat-label">DIGEST IN</text>
+          <view class="stat-value">5 <text class="unit">min</text></view>
+        </view>
+        <view class="divider"></view>
+        <view class="stat-item rating-item">
+          <text class="stat-label">USER RATING</text>
+          <view class="rating-box">
+            <view class="progress-mini"><view class="fill" style="width: 70%;"></view></view>
+            <text class="rating-text">4.2 ★</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="full-summary-btn">
+        <text>FULL SUMMARY</text>
+        <text class="arrow">↗</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="tabs-container">
+    <view class="tab-pill active">All</view>
+    <view class="tab-pill">
+      <view class="dot pink"></view> Summaries
+    </view>
+    <view class="tab-pill">
+      <view class="dot teal"></view> Short Reads
+    </view>
+  </view>
+</view>

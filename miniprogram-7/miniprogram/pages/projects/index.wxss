@@ -1,0 +1,226 @@
+page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e3faf4 0%, #fdeef2 50%, #fcfaf0 100%) no-repeat fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+    padding-bottom: 60rpx; /* 移除了底部大留白 */
+  }
+  
+  .container {
+    padding: 40rpx 32rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* 确保容器内所有内容默认靠左对齐 */
+  }
+  
+  /* --- 顶部导航 --- */
+  .nav-bar {
+    width: 100%; /* 撑满宽度 */
+    display: flex;
+    justify-content: space-between; /* Brand靠左，Menu靠右的关键 */
+    align-items: center;
+    margin-bottom: 40rpx;
+  }
+  
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+  }
+  
+  .brand-icon {
+    width: 60rpx;
+    height: 60rpx;
+    background-color: #00dbb5;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .calendar-icon {
+    width: 24rpx;
+    height: 24rpx;
+    border: 4rpx solid white;
+    border-radius: 4rpx;
+  }
+  
+  .brand-text {
+    font-size: 24rpx;
+    font-weight: 700;
+    letter-spacing: 2rpx;
+    color: #00dbb5;
+    text-transform: uppercase;
+  }
+  
+  .menu-btn {
+    width: 80rpx;
+    height: 80rpx;
+    background: white;
+    border-radius: 24rpx;
+    box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8rpx;
+  }
+  
+  .line {
+    width: 32rpx;
+    height: 4rpx;
+    background: #333;
+    border-radius: 4rpx;
+  }
+  .line-2 { width: 24rpx; transform: translateX(4rpx); }
+  
+  /* --- 大标题靠左 --- */
+  .page-header {
+    width: 100%;
+    margin-bottom: 48rpx;
+    text-align: left;
+  }
+  
+  .title-line {
+    font-size: 64rpx;
+    font-weight: 800;
+    color: #1a1b2e;
+    line-height: 1.1;
+    display: block; /* 确保换行且靠左 */
+  }
+  
+  .highlight {
+    background: linear-gradient(90deg, #38e0c6 0%, #d87ce8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* --- 卡片通用 --- */
+  .card {
+    background: white;
+    border-radius: 40rpx;
+    box-shadow: 0 16rpx 40rpx rgba(200, 200, 200, 0.25);
+    padding: 32rpx;
+    margin-bottom: 24rpx;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* CVPR 卡片 */
+  .featured-card {
+    margin-bottom: 48rpx;
+    padding: 40rpx;
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40rpx;
+  }
+  
+  .header-left {
+    display: flex;
+    gap: 24rpx;
+  }
+  
+  .logo-box {
+    width: 100rpx;
+    height: 100rpx;
+    background: #0f1020;
+    border-radius: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .logo-box text {
+    color: white;
+    font-weight: 800;
+    font-size: 24rpx;
+  }
+  
+  .conference-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .conf-name {
+    font-size: 36rpx;
+    font-weight: 800;
+    color: #0f1020;
+  }
+  
+  .conf-loc {
+    font-size: 26rpx;
+    color: #888;
+  }
+  
+  .fire-badge {
+    background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 24rpx 24rpx 4rpx 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+  }
+  
+  /* 进度条与提示 */
+  .deadline-row { display: flex; justify-content: space-between; margin-bottom: 16rpx; }
+  .label { font-size: 22rpx; font-weight: 700; color: #a0a0b0; }
+  .days-left { font-size: 24rpx; font-weight: 800; color: #ff8c42; }
+  .progress-track { height: 16rpx; background: #f0f0f5; border-radius: 10rpx; margin-bottom: 32rpx; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, #ffcc33 0%, #ff6b6b 100%); border-radius: 10rpx; }
+  .note-box { background: #fff8f0; border-radius: 20rpx; padding: 24rpx; font-size: 24rpx; color: #666; border: 1px solid #fff0e0; }
+  .note-label { color: #ff8c42; font-weight: 700; }
+  
+  /* 网格 */
+  .grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24rpx;
+    width: 100%;
+  }
+  
+  .grid-card {
+    min-height: 320rpx;
+    margin-bottom: 0; /* 在网格中不使用底部外边距 */
+  }
+  
+  /* 卡片内部元素样式同前 */
+  .card-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24rpx; }
+  .icon-circle { width: 60rpx; height: 60rpx; border-radius: 50%; }
+  .teal-icon { background: #e0fcf6; }
+  .gray-icon { background: #f5f5f7; }
+  .tag { background: #f0f0f5; padding: 8rpx 16rpx; border-radius: 12rpx; font-size: 20rpx; font-weight: 600; color: #666; }
+  .card-title { font-size: 32rpx; font-weight: 800; color: #1a1b2e; }
+  .card-subtitle { font-size: 24rpx; color: #999; }
+  .dashed-line { border-top: 2rpx dashed #eee; margin: 16rpx 0; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; }
+  .footer-tag { font-size: 20rpx; font-weight: 800; color: #00dbb5; }
+  
+  /* CHI 特殊Banner */
+  .pink-banner { background: #f3e5f5; height: 120rpx; border-radius: 20rpx; display: flex; align-items: center; justify-content: center; position: relative; margin: -32rpx -32rpx 20rpx -32rpx; width: calc(100% + 64rpx); }
+  .pink-banner text { font-size: 40rpx; font-weight: 800; color: #e1bee7; }
+  .year-tag { position: absolute; bottom: 10rpx; right: 10rpx; background: #ffd700; font-size: 18rpx; padding: 4rpx 8rpx; border-radius: 8rpx; font-weight: bold; }
+  .card-footer-pill { background: #fff0f6; padding: 12rpx 20rpx; border-radius: 16rpx; display: flex; justify-content: space-between; align-items: center; color: #d63384; font-size: 22rpx; font-weight: 700; }
+  
+  /* 橙色卡片 */
+  .orange-card { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); }
+  .white-text { color: white; }
+  .white-text-o { color: rgba(255,255,255,0.8); }
+  .big-percent { font-size: 64rpx; font-weight: 900; color: white; }
+  
+  /* 添加新追踪卡片 */
+  .add-new-card {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16rpx;
+    color: #999;
+  }
+  .plus-circle { width: 40rpx; height: 40rpx; background: #f0f0f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; }

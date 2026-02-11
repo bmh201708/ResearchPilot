@@ -1,0 +1,76 @@
+<!--pages/register/register.wxml-->
+<view class="page">
+
+<!-- 背景装饰 -->
+<view class="blob sunny"></view>
+<view class="blob orange"></view>
+<view class="blob pink"></view>
+
+
+<!-- 浮动图标 -->
+<text class="float-icon science">⚗️</text>
+<text class="float-icon edit">✏️</text>
+
+<!-- Header -->
+<view class="header">
+  <view class="logo">
+    <text class="cap">🎓</text>
+    <text class="spark">✨</text>
+  </view>
+
+  <text class="title">Join the Lab</text>
+  <text class="subtitle">
+    Create your playground to explore,
+    design, and manage research.
+  </text>
+</view>
+
+<!-- 表单 -->
+<view class="form">
+
+  <view class="field">
+    <text class="label">Full Name</text>
+    <view class="input-box">
+      <text class="icon">👤</text>
+      <input placeholder="e.g. Marie Curie" />
+    </view>
+  </view>
+
+  <view class="field">
+    <text class="label">Academic Email</text>
+    <view class="input-box">
+      <text class="icon">✉️</text>
+      <input placeholder="name@university.edu" />
+    </view>
+  </view>
+
+  <view class="field">
+    <text class="label">Field of Study</text>
+    <view class="input-box">
+      <text class="icon">🔬</text>
+      <input placeholder="e.g. Neuroscience" />
+    </view>
+  </view>
+
+  <view class="field">
+    <text class="label">Password</text>
+    <view class="input-box">
+      <text class="icon">🔒</text>
+      <input password placeholder="Create a strong password" />
+    </view>
+  </view>
+
+  <!-- Sign Up -->
+  <view class="btn primary" bindtap="onSignUp">
+    <text>Sign Up →</text>
+  </view>
+
+  <!-- 登录入口 -->
+  <view class="login-tip">
+    Already have a lab pass?
+    <text class="login-link" bindtap="goLogin">Log in</text>
+  </view>
+
+</view>
+
+</view>

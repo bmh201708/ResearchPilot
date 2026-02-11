@@ -1,0 +1,120 @@
+<!--pages/profile/index.wxml-->
+<view class="container">
+
+  <view class="header-nav">
+    <view class="circle-btn">
+        <image class="icon-img" src="/images/profile/set.png" mode="aspectFit"></image> 
+    </view>
+  </view>
+
+  <view class="profile-header">
+    <view class="avatar-container">
+      <view class="avatar-ring">
+        <image class="avatar-img" src="/images/profile/user.png" mode="aspectFill"></image>
+      </view>
+      <view class="badge-night">
+        <text class="badge-icon">🌙</text>
+        <text class="badge-text">Night Owl</text>
+      </view>
+    </view>
+    <text class="user-name">Dr. UserName</text>
+    <text class="user-bio">Design-minded academic explorer</text>
+  </view>
+
+  <view class="stats-grid">
+    <view class="stat-card">
+      <view class="stat-header">
+        <view class="icon-box bg-sunny-light">📖</view>
+        <text class="stat-label">READING</text>
+      </view>
+      <view class="stat-content">
+        <view class="stat-value-group">
+          <text class="stat-number">2.5</text>
+          <text class="stat-unit">hrs</text>
+        </view>
+        <view class="bar-chart">
+          <view class="bar" style="height: 40%; opacity: 0.3;"></view>
+          <view class="bar" style="height: 60%; opacity: 0.5;"></view>
+          <view class="bar" style="height: 100%; opacity: 1;"></view>
+          <view class="bar" style="height: 80%; opacity: 0.7;"></view>
+          <view class="bar" style="height: 50%; opacity: 0.4;"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="stat-card">
+      <view class="stat-header">
+        <view class="icon-box bg-pink-light">🧠</view>
+        <text class="stat-label">FOCUS</text>
+      </view>
+      <view class="stat-content-row">
+  <view class="stat-left-column">
+    <view class="stat-value-group">
+      <text class="stat-number">85</text>
+      <text class="stat-unit">%</text>
+    </view>
+    
+    <view class="peak-state">
+      <text>📈 Peak State</text>
+    </view>
+  </view>
+
+  <view class="progress-circle"></view>
+</view>
+    </view>
+  </view>
+
+  <view class="papers-section">
+    <view class="section-header">
+      <text class="section-title">Collected Papers</text>
+      <view class="see-all">See All</view>
+    </view>
+
+    <view class="paper-list">
+      <view class="paper-card">
+        <view class="orange-dot"></view>
+        <view class="paper-icon bg-indigo-gradient">
+            <image class="icon-img" src="/images/profile/subject_1.png" mode="aspectFit"></image> 
+        </view>
+        <view class="paper-info">
+          <text class="paper-title">Human-AI Symbiosis</text>
+          <text class="paper-desc">Exploring collaborative patterns in generative design workflows.</text>
+          <view class="tag-group">
+            <text class="tag">HCI</text>
+            <text class="tag">2024</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="paper-card">
+        <view class="paper-icon bg-teal-gradient">
+            <image class="icon-img" src="/images/profile/subject_2.png" mode="aspectFit"></image> 
+        </view>
+        <view class="paper-info">
+          <text class="paper-title">Cognitive Load in AR</text>
+          <text class="paper-desc">Reducing friction in spatial computing interfaces for education.</text>
+          <view class="tag-group">
+            <text class="tag">UX</text>
+            <text class="tag">PRE-PRINT</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="paper-card">
+        <view class="paper-icon bg-pink-gradient">
+            <image class="icon-img" src="/images/profile/subject_3.png" mode="aspectFit"></image> 
+        </view>
+        <view class="paper-info">
+          <text class="paper-title">Visual Syntax Theory</text>
+          <text class="paper-desc">A structural analysis of modern UI design languages.</text>
+          <view class="tag-group">
+            <text class="tag">DESIGN</text>
+            <text class="tag">2023</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view style="height: 100px;"></view>
+</view>

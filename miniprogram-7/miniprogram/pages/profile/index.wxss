@@ -1,0 +1,307 @@
+/* pages/profile/index.wxss */
+page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e3faf4 0%, #fdeef2 50%, #fcfaf0 100%) no-repeat fixed;
+    
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+  }
+  
+  .container {
+    padding: 0 40rpx;
+  }
+  
+  /* 顶部模拟 */
+  .header-nav {
+    display: flex;            /* 开启 Flex 布局 */
+    justify-content: flex-end; /* 子元素向主轴终点（右侧）对齐 */
+    padding: 20rpx 40rpx;      /* 建议加上内边距，防止按钮贴死屏幕边缘 */
+    width: 100%;               /* 确保容器占满宽度 */
+    box-sizing: border-box;    /* 保证 padding 不撑开宽度 */
+  }
+  
+  .circle-btn {
+    width: 80rpx;
+    height: 80rpx;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1rpx solid #eee;
+    box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.05);
+  }
+  
+  /* 头像区域 */
+  .profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 0rpx;
+  }
+  
+  .avatar-ring {
+    width: 200rpx;
+    height: 200rpx;
+    background: linear-gradient(135deg, #2DD4BF, #F472B6, #FACC15);
+    border-radius: 50%;
+    padding: 10rpx;
+    box-shadow: 0 20rpx 40rpx rgba(244, 114, 182, 0.2);
+    display: flex;           /* 开启弹性布局 */
+    justify-content: center;  /* 水平居中 */
+    align-items: center;      /* 垂直居中 */
+  }
+  
+  .avatar-img {
+    width: 100%;           
+    height: 100%;
+    border-radius: 50%;
+    border: 6rpx solid #fff;
+    background: #fff;
+    box-sizing: border-box; 
+  }
+  
+  .avatar-container {
+    position: relative;
+    margin-bottom: 30rpx;
+  }
+  
+  .badge-night {
+    position: absolute;
+    bottom: -10rpx;
+    right: -20rpx;
+    background: #2E1065;
+    color: #fff;
+    padding: 10rpx 20rpx;
+    border-radius: 30rpx;
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    border: 4rpx solid #fff;
+    transform: rotate(3deg);
+    box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.2);
+  }
+  
+  .badge-text {
+    font-size: 20rpx;
+    font-weight: bold;
+  }
+  
+  .user-name {
+    font-size: 48rpx;
+    font-weight: 800;
+    margin-bottom: 10rpx;
+  }
+  
+  .user-bio {
+    font-size: 28rpx;
+    color: #888;
+    margin-bottom: 40rpx;
+  }
+  
+  /* 统计卡片布局 */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30rpx;
+    width: 100%;
+  }
+  
+  .stat-card {
+    background: #fff;
+    border-radius: 40rpx;
+    padding: 30rpx;
+    box-shadow: 0 20rpx 40rpx rgba(0,0,0,0.05);
+    border: 1rpx solid rgba(250, 204, 21, 0.1);
+  }
+  
+  .stat-header {
+    display: flex;
+    align-items: center;
+    gap: 15rpx;
+    margin-bottom: 30rpx;
+  }
+  
+  .icon-box {
+    width: 50rpx;
+    height: 50rpx;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24rpx;
+  }
+  
+  .bg-sunny-light { background: rgba(250, 204, 21, 0.2); color: #FB923C; }
+  .bg-pink-light { background: rgba(244, 114, 182, 0.1); color: #F472B6; }
+  
+  .stat-label {
+    font-size: 20rpx;
+    font-weight: bold;
+    color: #bbb;
+    letter-spacing: 2rpx;
+  }
+  
+  .stat-value-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6rpx;
+  }
+  
+  .stat-number {
+    font-size: 50rpx;
+    font-weight: 800;
+  }
+  
+  .stat-unit {
+    font-size: 24rpx;
+    color: #bbb;
+    font-weight: bold;
+  }
+  
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8rpx;
+    height: 60rpx;
+    margin-top: 20rpx;
+  }
+  
+  .bar {
+    flex: 1;
+    background: #FACC15;
+    border-radius: 4rpx 4rpx 0 0;
+  }
+  
+/* 外层容器，确保左侧内容和右侧圆环水平分布 */
+.stat-content-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* 让左侧文字整体与右侧圆环垂直居中对齐 */
+  }
+  
+  /* 左侧垂直布局容器 */
+  .stat-left-column {
+    display: flex;
+    flex-direction: column; /* 关键：强制子元素换行显示 */
+    justify-content: center;
+  }
+  
+
+  .stat-value-group {
+    display: flex;
+    align-items: baseline; /* 让数字底部对齐 */
+    margin-bottom: 4rpx;   /* 与下方 Peak State 的微调间距 */
+  }
+  
+  .peak-state {
+    color: #2DD4BF;
+    font-size: 18rpx;
+    font-weight: bold;
+    display: block; 
+  }
+  
+  .progress-circle {
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 50%;
+    border: 6rpx solid #F472B6;
+    border-left-color: #f3f3f3;
+  }
+  
+  /* 论文列表 */
+  .papers-section {
+    margin-top: 60rpx;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30rpx;
+  }
+  
+  .section-title {
+    font-size: 36rpx;
+    font-weight: 800;
+  }
+  
+  .see-all {
+    font-size: 24rpx;
+    font-weight: bold;
+    color: #2DD4BF;
+    background: rgba(45, 212, 191, 0.1);
+    padding: 10rpx 24rpx;
+    border-radius: 30rpx;
+  }
+  
+  .paper-card {
+    background: #fff;
+    padding: 30rpx;
+    border-radius: 40rpx;
+    display: flex;
+    gap: 30rpx;
+    margin-bottom: 30rpx;
+    box-shadow: 0 15rpx 30rpx rgba(0,0,0,0.05);
+    position: relative;
+  }
+  
+  .orange-dot {
+    position: absolute;
+    top: 20rpx;
+    right: 20rpx;
+    width: 12rpx;
+    height: 12rpx;
+    background: #FB923C;
+    border-radius: 50%;
+  }
+  
+  
+  .paper-icon {
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 30rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  
+  .bg-indigo-gradient { background: linear-gradient(135deg, #4F46E5, #818CF8); }
+  .bg-teal-gradient { background: linear-gradient(135deg, #2DD4BF, #5EEAD4); }
+  .bg-pink-gradient { background: linear-gradient(135deg, #F472B6, #FB7185); }
+  
+  .paper-title {
+    font-size: 32rpx;
+    font-weight: 800;
+    display: block;
+  }
+  
+  .paper-desc {
+    font-size: 22rpx;
+    color: #888;
+    margin: 10rpx 0;
+    display: block;
+  }
+  
+  .tag-group {
+    display: flex;
+    gap: 15rpx;
+  }
+  
+  .tag {
+    background: #F3F4F6;
+    color: #888;
+    font-size: 18rpx;
+    font-weight: 800;
+    padding: 4rpx 12rpx;
+    border-radius: 8rpx;
+  }
+
+  /* Icon 图片通用尺寸 */
+  .icon-img{
+    /* 实际开发中移除背景色，这里为了演示位置 */
+    width: 60%;
+    height: 60%;
+  }

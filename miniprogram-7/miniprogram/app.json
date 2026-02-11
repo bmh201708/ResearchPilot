@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/register/register",
+    "pages/lab/index",
+    "pages/explore/index",
+    "pages/explore_Card/index",
+    "pages/paper/detail",
+    "pages/projects/index",
+    "pages/profile/index"
+  ],
+  "tabBar": {
+    "custom": false, 
+    "color": "#9CA3AF",
+    "selectedColor": "#2DD4BF",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/lab/index",
+        "text": "LAB",
+        "iconPath": "images/tabbar/lab.png",
+        "selectedIconPath": "images/tabbar/lab_sel.png"
+      },
+      {
+        "pagePath": "pages/explore/index",
+        "text": "EXPLORE",
+        "iconPath": "images/tabbar/explore.png",
+        "selectedIconPath": "images/tabbar/explore_sel.png"
+      },
+      {
+        "pagePath": "pages/projects/index",
+        "text": "PROJECTS",
+        "iconPath": "images/tabbar/project.png",
+        "selectedIconPath": "images/tabbar/project_sel.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "PROFILE",
+        "iconPath": "images/tabbar/profile.png",
+        "selectedIconPath": "images/tabbar/profile_sel.png"
+      }
+    ]
+  },
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F6F6F6",
+    "navigationBarTitleText": "云开发 QuickStart",
+    "navigationBarTextStyle": "black"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,119 @@
+<!--pages/lab/index.wxml-->
+<view class="container">
+  <view class="header-wrapper">
+    <view class="left-column">
+      <view class="brand">
+        <view class="logo-box">
+          <image class="icon-img" src="/images/lab/lab.png" mode="aspectFit"></image> 
+        </view>
+        <text class="brand-name">AI LAB</text>
+      </view>
+
+      <view class="title-section">
+        <view class="title-main">Select</view>
+        <view class="title-gradient">Research Tool</view>
+      </view>
+    </view>
+
+    <view class="right-column">
+      <view class="notification-btn">
+        <view class="dot"></view>
+        <image class="icon-bell" src="/images/lab/bell.png" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+
+  <view class="card card-large">
+    <view class="card-header">
+      <view class="icon-large-box bg-teal-gradient">
+        <image class="icon-xl" src="/images/lab/robot.png"></image>
+      </view>
+      <view class="badge badge-popular">
+        <text class="badge-icon">⚡</text>
+        <text>POPULAR</text>
+      </view>
+    </view>
+    
+    <view class="card-body">
+      <text class="card-title">Rebuttal Simulator</text>
+      <text class="card-desc">Simulate peer review feedback using advanced LLMs trained on top-tier journals.</text>
+    </view>
+
+    <view class="card-footer">
+      <view class="avatar-group">
+        <view class="avatar bg-blue"><text>A</text></view>
+        <view class="avatar bg-pink"><text>R</text></view>
+        <view class="avatar bg-gray"><text>+4</text></view>
+      </view>
+      <button class="btn-launch">
+        LAUNCH <text class="arrow">→</text>
+      </button>
+    </view>
+  </view>
+
+  <view class="card card-row">
+    <view class="icon-medium-box bg-orange-gradient">
+      <image class="icon-lg" src="/images/lab/wand.png"></image>
+    </view>
+    <view class="card-row-content">
+      <view class="flex-row">
+        <text class="card-subtitle">Academic Polisher</text>
+        <view class="badge-new">NEW</view>
+      </view>
+      <text class="card-desc-sm">Refine tone, clarity, and conciseness for your manuscript drafts.</text>
+      
+      <view class="progress-bg">
+        <view class="progress-fill" style="width: 75%;"></view>
+      </view>
+      
+      <view class="card-meta">
+        <text class="meta-gray">75% Accuracy Boost</text>
+        <text class="meta-orange">v2.0 BETA</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="grid-section">
+    <view class="card grid-item">
+      <view class="icon-circle bg-blue-light">
+        <image class="icon-md" src="/images/lab/chart.png"></image>
+      </view>
+      <text class="grid-title">Data Viz</text>
+      <text class="grid-desc">CSV to Chart</text>
+    </view>
+
+    <view class="card grid-item">
+      <view class="icon-circle bg-pink-light">
+        <image class="icon-md" src="/images/lab/cite.png"></image>
+      </view>
+      <text class="grid-title">Citations</text>
+      <text class="grid-desc">Auto-Format</text>
+    </view>
+  </view>
+
+  <view class="list-section">
+    <view class="section-header">
+      <view class="flex-row">
+        <text class="section-title">Active Quests</text>
+        <view class="badge-count">3 ONGOING</view>
+      </view>
+      <text class="link-text">VIEW ALL</text>
+    </view>
+
+    <view class="card list-item">
+      <view class="icon-square bg-teal-light">
+        <image class="icon-md" src="/images/lab/brain.png"></image>
+      </view>
+      <view class="list-content">
+        <text class="list-title">Neural Optimization</text>
+        <view class="list-meta">
+          <text class="tag-running">RUNNING</text>
+          <text class="time-ago">2H AGO</text>
+        </view>
+      </view>
+      <text class="arrow-gray">></text>
+    </view>
+  </view>
+
+  <view style="height: 120px;"></view>
+</view>
