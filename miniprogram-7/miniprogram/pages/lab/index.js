@@ -1,3 +1,6 @@
+const app = getApp();
+const { request } = require("../../utils/request");
+
 // pages/lab/index.js
 Page({
 
@@ -5,7 +8,7 @@ Page({
    * 页面的初始数据
    */
   data: {
-
+    user: null,
   },
 
   /**
@@ -26,7 +29,31 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow() {
+    this.syncCurrentUser();
+  },
 
+  async syncCurrentUser() {
+    try {
+      const user = await request({
+        url: "/users/me",
+        method: "GET",
+        auth: true,
+      });
+      app.globalData.user = user;
+      this.setData({ user });
+    } catch (err) {
+      const code = err && err.statusCode;
+      if (code === 401 || err.message === "missing_token") {
+        wx.removeStorageSync("token");
+        wx.removeStorageSync("user");
+        app.globalData.user = null;
+        wx.reLaunch({
+          url: "/pages/login/login",
+        });
+        return;
+      }
+      console.error("获取用户信息失败", err);
+    }
   },
 
   /**
