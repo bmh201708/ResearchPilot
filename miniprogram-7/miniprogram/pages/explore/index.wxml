@@ -18,84 +18,56 @@
     <view class="title-line highlight">Fresh Ideas</view>
   </view>
 
-  <scroll-view class="tabs-scroll" scroll-x="true" enable-flex="true">
-    <view class="tab-item active">For You</view>
-    <view class="tab-item">Trending</view>
-    <view class="tab-item">Visuals</view>
-    <view class="tab-item">Data</view>
-  </scroll-view>
+  <view class="search-panel">
+    <input
+      class="search-input"
+      type="text"
+      value="{{keywords}}"
+      bindinput="onKeywordInput"
+      bindconfirm="onSearchTap"
+      confirm-type="search"
+      placeholder="输入关键词检索论文，留空使用默认关键词"
+    />
+    <button class="search-btn" loading="{{isLoading}}" bindtap="onSearchTap">搜索</button>
+  </view>
+  <view class="search-meta">
+    <text class="search-meta-text">当前关键词：{{appliedKeywords || "默认关键词"}}</text>
+  </view>
+  <view wx:if="{{source==='local_cache'}}" class="search-warning">
+    Semantic Scholar 限流，已自动回退到本地缓存
+  </view>
 
-  <view class="discovery-grid">
+  <view wx:if="{{isLoading}}" class="state-text">正在获取推荐论文...</view>
+  <view wx:elif="{{errorMsg}}" class="state-text state-error">{{errorMsg}}</view>
+  <view wx:elif="{{!papers.length}}" class="state-text">暂无结果，换个关键词试试</view>
+
+  <view wx:else class="discovery-grid">
     <view class="grid-column">
-      <view class="card idea-card" bindtap="onCardClick">
-        <view class="card-image bg-mint">
-          <view class="inner-icon">🌳</view>
-        </view>
+      <view class="card idea-card" wx:for="{{leftPapers}}" wx:key="id" bindtap="onPaperTap" data-id="{{item.id}}">
         <view class="card-content">
-          <view class="tag-label mint-text">ECOLOGY</view>
-          <view class="card-title">Urban Biodiversity Patterns</view>
+          <view class="tag-label mint-text">{{item.yearText}}</view>
+          <view class="card-title">{{item.title}}</view>
+          <view class="card-abstract">{{item.abstractShort}}</view>
           <view class="card-footer">
-            <view class="mini-avatars">
-              <view class="avt avt-1"></view>
-              <view class="avt avt-2"></view>
-            </view>
-            <text class="time-text">2h ago</text>
+            <text class="author-text">{{item.authorsText}}</text>
+            <text class="time-text">{{item.citationText}}</text>
           </view>
-        </view>
-      </view>
-
-      <view class="card idea-card" bindtap="onCardClick">
-        <view class="card-image bg-pink">
-          <view class="inner-icon">🧠</view>
-        </view>
-        <view class="card-content">
-          <view class="tag-label pink-text">COGNITIVE</view>
-          <view class="card-title">Visual Memory in AI Agents</view>
         </view>
       </view>
     </view>
 
     <view class="grid-column">
-      <view class="card idea-card" bindtap="onCardClick">
-        <view class="quote-box bg-orange">
-          <view class="lamp-icon">💡</view>
-          <text class="quote-text">"Innovation is not just about technology, it's about context."</text>
-        </view>
+      <view class="card idea-card" wx:for="{{rightPapers}}" wx:key="id" bindtap="onPaperTap" data-id="{{item.id}}">
         <view class="card-content">
-          <view class="tags-row">
-            <text class="tag-mini">DESIGN</text>
-            <text class="tag-mini-gray">TECH</text>
+          <view class="tag-label blue-text">{{item.yearText}}</view>
+          <view class="card-title">{{item.title}}</view>
+          <view class="card-abstract">{{item.abstractShort}}</view>
+          <view class="card-footer">
+            <text class="author-text">{{item.authorsText}}</text>
+            <text class="time-text">{{item.citationText}}</text>
           </view>
-          <view class="card-title">Contextual Design Systems</view>
-          <view class="like-info">❤️ 124</view>
-        </view>
-      </view>
-
-      <view class="card idea-card" bindtap="onCardClick">
-        <view class="card-image bg-blue">
-          <view class="inner-icon">📈</view>
-        </view>
-        <view class="card-content">
-          <view class="tag-label blue-text">DATA</view>
-          <view class="card-title">Big Data Viz Trends</view>
         </view>
       </view>
     </view>
   </view>
-
-  <view class="card featured-bottom">
-    <view class="featured-header">
-      <view class="feat-icon">🎓</view>
-      <view class="feat-info">
-        <text class="feat-category">NEW COURSE</text>
-        <text class="feat-title">Academic Writing</text>
-      </view>
-    </view>
-    <view class="feat-body">
-      <view class="feat-main-title">Structuring Your Thesis</view>
-      <text class="feat-desc">A guide to effective argumentation in...</text>
-    </view>
-    <button class="read-btn">Start Reading</button>
-  </view>
-
 </view>

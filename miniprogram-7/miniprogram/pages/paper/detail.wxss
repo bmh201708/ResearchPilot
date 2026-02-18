@@ -1,188 +1,149 @@
-/* pages/urban/urban.wxss */
-
-/* 页面基础 */
-/* 页面基础 - 调优后的背景色 */
 page {
-    min-height: 100vh;
-    /* 调整为更低饱和度的颜色，并将角度微调为 160deg 使过渡更自然 */
-    background: linear-gradient(160deg, 
-      #f2faf8 0%,    /* 极淡的薄荷绿，增加白调 */
-      #fff2f5 50%,   /* 极淡的樱花粉，减少灰调 */
-      #fdfbf3 100%   /* 极淡的奶油黄，更加温润 */
-    ) no-repeat fixed;
-    
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    box-sizing: border-box;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .container {
-    padding: 30rpx 40rpx; /* 这里控制了整体左右的边距，内容会贴着这个边距对齐 */
-  }
-  
-  /* 顶部大图 */
-  .hero-section {
-    margin-bottom: 40rpx;
-  }
-  .hero-image-placeholder {
-    width: 340px;
-    height: 420rpx;
-    background-color: #cbf9e8;
-    border-radius: 60rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10rpx 30rpx rgba(203, 249, 232, 0.4);
-  }
-  .icon-tree {
-    width: 100rpx;
-    height: 100rpx;
-    background: #5cdebd;
-    border-radius: 50% 50% 0 0;
-    position: relative;
-  }
-  .icon-tree::after {
-    content: '';
-    position: absolute;
-    bottom: -30rpx;
-    left: 40rpx;
-    width: 20rpx;
-    height: 40rpx;
-    background: #4db69f;
-  }
-  
-  /* --- 修改点 1: Tag 行靠左 --- */
-  .tag-row {
-    display: flex;
-    justify-content: flex-start; /* 明确靠左对齐 */
-    gap: 20rpx;
-    margin-bottom: 30rpx;
-  }
-  
-  .tag {
-    padding: 10rpx 24rpx;
-    border-radius: 100rpx;
-    font-size: 20rpx;
-    font-weight: 700;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-  }
-  .tag.green { background-color: #d1fae5; color: #10b981; }
-  .tag.white { background-color: #fff; color: #666; box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.02); }
-  .icon-clock { width: 12rpx; height: 12rpx; border: 2rpx solid #999; border-radius: 50%; margin-right: 8rpx; }
-  
-  /* 标题 */
-  .page-title {
-    font-size: 56rpx;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.2;
-    margin-bottom: 40rpx;
-    text-align: left; /* 确保文字左对齐 */
-  }
-  
-  /* --- 修改点 2: Author 行两端对齐 --- */
-  .author-row {
-    display: flex;
-    justify-content: space-between; /* 关键：左边元素靠左，右边元素靠右 */
-    align-items: center;            /* 垂直居中 */
-    margin-bottom: 40rpx;
-    width: 100%;                    /* 确保占满容器宽度 */
-  }
-  
-  .author-info {
-    display: flex;
-    align-items: center;
-    gap: 20rpx;
-  }
-  
-  .avatar-circle {
-    width: 80rpx;
-    height: 80rpx;
-    background-color: #1e293b;
-    border-radius: 50%;
-    padding: 4rpx; /* 增加一点内边距让头像居中 */
-  }
-  .avatar-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: #334155; 
-  }
-  
-  .author-text { display: flex; flex-direction: column; }
-  .author-text .name { font-size: 28rpx; font-weight: 600; color: #1e293b; }
-  .author-text .role { font-size: 20rpx; color: #94a3b8; letter-spacing: 1px; margin-top: 4rpx; }
-  
-  /* 右侧加号按钮 */
-  .plus-btn {
-    width: 70rpx;
-    height: 70rpx;
-    border-radius: 50%;
-    background-color: #fff;
-    color: #0d9488;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40rpx;
-    font-weight: 300;
-    box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
-    flex-shrink: 0; /* 防止按钮被压缩 */
-  }
-  
-  .divider { height: 2rpx; background: rgba(0,0,0,0.03); margin-bottom: 40rpx; }
-  
-  /* Abstract 卡片 */
-  .card { background: #ffffff; border-radius: 40rpx; padding: 40rpx; margin-bottom: 30rpx; box-shadow: 0 10rpx 40rpx rgba(0,0,0,0.03); }
-  .abstract-card .card-header { display: flex; align-items: center; gap: 20rpx; margin-bottom: 24rpx; }
-  .icon-box { width: 60rpx; height: 60rpx; border-radius: 16rpx; display: flex; align-items: center; justify-content: center; font-size: 36rpx; font-weight: bold; }
-  .icon-box.cyan { background-color: #ccfbf1; color: #14b8a6; }
-  .card-title { font-size: 32rpx; font-weight: 700; color: #1e293b; }
-  .card-content { font-size: 28rpx; color: #475569; line-height: 1.6; }
-  .highlight-text { color: #0d9488; background-color: #f0fdfa; padding: 2rpx 8rpx; border-radius: 8rpx; font-weight: 500; }
-  
-  /* --- 修改点 3: Core Insights 标题行两端对齐 --- */
-  .section-header {
-    display: flex;
-    justify-content: space-between; /* 关键：左标题，右Badge */
-    align-items: center;
-    margin-bottom: 30rpx;
-    margin-top: 50rpx;
-    width: 100%;
-  }
-  
-  .section-title {
-    font-size: 36rpx;
-    font-weight: 700;
-    color: #0f172a;
-  }
-  
-  .pill-badge {
-    background-color: #fce7f3;
-    color: #db2777;
-    font-size: 22rpx;
-    padding: 8rpx 20rpx;
-    border-radius: 20rpx;
-    font-weight: 600;
-    flex-shrink: 0; /* 防止Badge被压缩 */
-  }
-  
-  /* Insight 卡片 */
-  .insight-card { display: flex; align-items: flex-start; gap: 30rpx; padding: 30rpx; }
-  .insight-icon-wrapper { width: 90rpx; height: 90rpx; border-radius: 24rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-  .orange-bg { background-color: #ffedd5; }
-  .pink-bg { background-color: #fce7f3; }
-  .emoji-icon { font-size: 40rpx; }
-  .insight-content { display: flex; flex-direction: column; }
-  .insight-title { font-size: 28rpx; font-weight: 700; color: #0f172a; margin-bottom: 10rpx; }
-  .insight-desc { font-size: 24rpx; color: #64748b; line-height: 1.5; }
-  
-  /* 底部栏 */
-  .bottom-bar-container { position: fixed; bottom: 50rpx; left: 0; width: 100%; display: flex; justify-content: center; z-index: 100; pointer-events: none; }
-  .bottom-bar { pointer-events: auto; background: #ffffff; padding: 16rpx; border-radius: 100rpx; display: flex; gap: 16rpx; box-shadow: 0 10rpx 40rpx rgba(0,0,0,0.1); align-items: center; }
-  .action-btn { height: 90rpx; display: flex; align-items: center; justify-content: center; border-radius: 50rpx; transition: all 0.2s; }
-  .action-btn.share { width: 90rpx; background-color: #f8fafc; }
-  .icon-share { font-size: 36rpx; color: #64748b; }
-  .action-btn.main-btn { background: linear-gradient(90deg, #4fd1c5 0%, #f687b3 100%); color: white; padding: 0 40rpx; font-weight: 600; font-size: 28rpx; gap: 12rpx; }
-  .icon-bookmark { font-size: 32rpx; }
-  .action-btn.more { width: 90rpx; background-color: #f8fafc; color: #64748b; font-weight: 900; font-size: 30rpx; padding-bottom: 10rpx; box-sizing: border-box; }
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f2faf8 0%, #fff2f5 50%, #fdfbf3 100%)
+    no-repeat fixed;
+}
+
+.container {
+  padding: 28rpx;
+}
+
+.state-text {
+  margin-top: 80rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.state-error {
+  color: #d62828;
+}
+
+.paper-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+}
+
+.badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge {
+  font-size: 20rpx;
+  color: #0f766e;
+  background: #ccfbf1;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-weight: 700;
+}
+
+.date-text {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.title {
+  font-size: 42rpx;
+  line-height: 1.35;
+  font-weight: 800;
+  color: #111827;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.meta-item {
+  background: #ffffff;
+  border-radius: 18rpx;
+  padding: 12rpx 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.meta-label {
+  font-size: 20rpx;
+  color: #6b7280;
+}
+
+.meta-value {
+  font-size: 22rpx;
+  color: #111827;
+  font-weight: 700;
+}
+
+.venue {
+  max-width: 380rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.04);
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.card-content {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.link-text {
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  color: #0b57d0;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.action-row {
+  margin-top: 20rpx;
+  display: flex;
+  gap: 14rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 78rpx;
+  line-height: 78rpx;
+  background: #e5e7eb;
+  color: #111827;
+  font-size: 24rpx;
+  border-radius: 18rpx;
+}
+
+.action-btn-dark {
+  background: #111827;
+  color: #ffffff;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.tag {
+  background: #ecfeff;
+  color: #155e75;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+}

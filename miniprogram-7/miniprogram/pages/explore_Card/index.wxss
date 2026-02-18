@@ -267,3 +267,112 @@ page {
   }
   .pink { background: #ff85a1; }
   .teal { background: #38e0c6; }
+
+  .search-panel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-bottom: 16rpx;
+  }
+
+  .search-input {
+    flex: 1;
+    height: 86rpx;
+    background: #ffffff;
+    border-radius: 24rpx;
+    padding: 0 28rpx;
+    font-size: 26rpx;
+    box-sizing: border-box;
+  }
+
+  .search-btn {
+    height: 86rpx;
+    min-width: 140rpx;
+    padding: 0 28rpx;
+    border-radius: 24rpx;
+    background: #1a1b2e;
+    color: #ffffff;
+    font-size: 24rpx;
+    font-weight: 700;
+    line-height: 86rpx;
+  }
+
+  .search-meta {
+    margin-bottom: 10rpx;
+  }
+
+  .search-meta-text {
+    font-size: 22rpx;
+    color: #6d6d7a;
+  }
+
+  .search-warning {
+    margin-bottom: 26rpx;
+    font-size: 22rpx;
+    color: #f97316;
+  }
+
+  .state-text {
+    width: 100%;
+    margin: 36rpx 0;
+    text-align: center;
+    font-size: 26rpx;
+    color: #666;
+  }
+
+  .state-error {
+    color: #d62828;
+  }
+
+  .authors-value {
+    font-size: 22rpx;
+    color: #333;
+    line-height: 1.4;
+  }
+
+  .list-container {
+    width: 100%;
+    margin-top: 20rpx;
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  }
+
+  .list-card {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 24rpx;
+    padding: 24rpx;
+    box-sizing: border-box;
+    box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.04);
+  }
+
+  .list-title {
+    font-size: 28rpx;
+    font-weight: 700;
+    color: #1a1b2e;
+    line-height: 1.35;
+  }
+
+  .list-meta {
+    margin-top: 12rpx;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16rpx;
+  }
+
+  .list-author {
+    flex: 1;
+    font-size: 22rpx;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .list-year {
+    font-size: 20rpx;
+    color: #999;
+  }

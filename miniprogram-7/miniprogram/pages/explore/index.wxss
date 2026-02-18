@@ -240,4 +240,76 @@ page {
     border-radius: 30rpx;
     border: none;
   }
+
+  .search-panel {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-bottom: 16rpx;
+  }
+
+  .search-input {
+    flex: 1;
+    height: 86rpx;
+    background: #ffffff;
+    border-radius: 24rpx;
+    padding: 0 28rpx;
+    font-size: 26rpx;
+    box-sizing: border-box;
+  }
+
+  .search-btn {
+    height: 86rpx;
+    min-width: 140rpx;
+    padding: 0 28rpx;
+    border-radius: 24rpx;
+    background: #1a1b2e;
+    color: #ffffff;
+    font-size: 24rpx;
+    font-weight: 700;
+    line-height: 86rpx;
+  }
+
+  .search-meta {
+    margin-bottom: 10rpx;
+  }
+
+  .search-meta-text {
+    font-size: 22rpx;
+    color: #6d6d7a;
+  }
+
+  .search-warning {
+    margin-bottom: 26rpx;
+    font-size: 22rpx;
+    color: #f97316;
+  }
+
+  .state-text {
+    margin: 36rpx 0;
+    text-align: center;
+    font-size: 26rpx;
+    color: #666;
+  }
+
+  .state-error {
+    color: #d62828;
+  }
+
+  .card-abstract {
+    margin-top: 14rpx;
+    font-size: 22rpx;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  .author-text {
+    flex: 1;
+    margin-right: 20rpx;
+    font-size: 20rpx;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   

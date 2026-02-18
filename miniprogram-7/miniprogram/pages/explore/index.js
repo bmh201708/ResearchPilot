@@ -1,92 +1,131 @@
-// pages/explore/index.js
+const app = getApp();
+const { request } = require("../../utils/request");
+
+function splitColumns(papers) {
+  const left = [];
+  const right = [];
+  papers.forEach((paper, index) => {
+    if (index % 2 === 0) {
+      left.push(paper);
+      return;
+    }
+    right.push(paper);
+  });
+  return { left, right };
+}
+
+function normalizePaper(item) {
+  const authors = Array.isArray(item.authors) ? item.authors : [];
+  const shortAbstract = (item.abstract || "").trim().slice(0, 120);
+  return {
+    id: item.id,
+    title: item.title || "Untitled Paper",
+    abstractShort: shortAbstract || "No abstract available.",
+    authorsText: authors.slice(0, 3).join(", ") || "Unknown authors",
+    yearText: item.year ? `${item.year}` : "Latest",
+    citationText: `Citations ${item.citationCount || 0}`,
+    source: item.source || "semantic_scholar",
+  };
+}
+
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    keywords: "",
+    appliedKeywords: "",
+    papers: [],
+    leftPapers: [],
+    rightPapers: [],
+    isLoading: false,
+    errorMsg: "",
+    source: "",
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  onLoad() {
+    const keywords = app.globalData.exploreKeywords || "";
+    this.setData({ keywords });
+    this.fetchPapers(keywords);
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
   onPullDownRefresh() {
-
+    this.fetchPapers(this.data.keywords, { stopPullDown: true });
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
+  onKeywordInput(e) {
+    this.setData({ keywords: e.detail.value || "" });
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
+  onSearchTap() {
+    this.fetchPapers(this.data.keywords);
   },
 
-  /**
-   * 顶部 Icon 按钮点击事件
-   * 跳转到 explore_Card 页面
-   */
-  onSwitchToCard: function() {
+  async fetchPapers(rawKeywords, options = {}) {
+    const keywords = (rawKeywords || "").trim();
+    const query = [
+      "page=1",
+      "pageSize=12",
+      keywords ? `keywords=${encodeURIComponent(keywords)}` : "",
+    ]
+      .filter(Boolean)
+      .join("&");
+
+    this.setData({ isLoading: true, errorMsg: "" });
+    try {
+      const resp = await request({
+        url: `/papers/feed?${query}`,
+        method: "GET",
+        auth: true,
+      });
+      const papers = (resp.items || []).map(normalizePaper);
+      const columns = splitColumns(papers);
+      const appliedKeywords =
+        (resp.meta && resp.meta.appliedKeywords) || keywords || "";
+
+      app.globalData.exploreKeywords = keywords;
+      this.setData({
+        appliedKeywords,
+        papers,
+        leftPapers: columns.left,
+        rightPapers: columns.right,
+        source: (resp.meta && resp.meta.source) || "",
+      });
+    } catch (err) {
+      if (err.statusCode === 401 || err.message === "missing_token") {
+        wx.removeStorageSync("token");
+        wx.removeStorageSync("user");
+        wx.reLaunch({ url: "/pages/login/login" });
+        return;
+      }
+      this.setData({
+        errorMsg: "获取论文失败，请稍后重试",
+      });
+    } finally {
+      this.setData({ isLoading: false });
+      if (options.stopPullDown) {
+        wx.stopPullDownRefresh();
+      }
+    }
+  },
+
+  onSwitchToCard() {
+    const keywords = encodeURIComponent((this.data.keywords || "").trim());
     wx.navigateTo({
-      url: '/pages/explore_Card/index',
+      url: `/pages/explore_Card/index?keywords=${keywords}`,
       fail: (err) => {
         console.error("跳转失败:", err);
-      }
+      },
     });
   },
 
-  /**
-   * 卡片点击事件
-   * 跳转到 paper/detail 页面
-   */
-  onCardClick: function() {
+  onPaperTap(e) {
+    const paperId = e.currentTarget && e.currentTarget.dataset
+      ? e.currentTarget.dataset.id
+      : "";
+    if (!paperId) return;
     wx.navigateTo({
-      url: '/pages/paper/detail',
+      url: `/pages/paper/detail?id=${encodeURIComponent(paperId)}`,
       fail: (err) => {
         console.error("跳转详情页失败:", err);
-      }
+      },
     });
-  }
-})
+  },
+});

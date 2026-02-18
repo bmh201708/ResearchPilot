@@ -1,66 +1,116 @@
-// pages/paper/detail.js
+const { request } = require("../../utils/request");
+
+function formatDate(value) {
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    paperId: "",
+    paper: null,
+    isLoading: true,
+    errorMsg: "",
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-
+    const paperId = decodeURIComponent(options.id || "").trim();
+    if (!paperId) {
+      this.setData({
+        isLoading: false,
+        errorMsg: "缺少论文 ID，无法加载详情",
+      });
+      return;
+    }
+    this.setData({ paperId });
+    this.fetchPaperDetail(paperId);
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
   onPullDownRefresh() {
-
+    if (!this.data.paperId) {
+      wx.stopPullDownRefresh();
+      return;
+    }
+    this.fetchPaperDetail(this.data.paperId, { stopPullDown: true });
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
+  async fetchPaperDetail(paperId, options = {}) {
+    this.setData({ isLoading: true, errorMsg: "" });
+    try {
+      const resp = await request({
+        url: `/papers/${encodeURIComponent(paperId)}`,
+        method: "GET",
+        auth: true,
+      });
 
+      const authors = Array.isArray(resp.authors) ? resp.authors : [];
+      const tags = Array.isArray(resp.tags) ? resp.tags : [];
+      const paper = {
+        id: resp.id,
+        title: resp.title || "Untitled Paper",
+        abstract: resp.abstract || "No abstract available.",
+        authors,
+        authorsText: authors.join(", ") || "Unknown authors",
+        tags,
+        publishedText: formatDate(resp.publishedAt),
+        venue: resp.venue || "",
+        year: resp.year || "",
+        citationCount: resp.citationCount || 0,
+        link: resp.link || "",
+      };
+      this.setData({ paper });
+    } catch (err) {
+      if (err.statusCode === 401 || err.message === "missing_token") {
+        wx.removeStorageSync("token");
+        wx.removeStorageSync("user");
+        wx.reLaunch({ url: "/pages/login/login" });
+        return;
+      }
+      this.setData({
+        errorMsg: "获取论文详情失败，请稍后重试",
+      });
+    } finally {
+      this.setData({ isLoading: false });
+      if (options.stopPullDown) {
+        wx.stopPullDownRefresh();
+      }
+    }
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
+  onCopyLink() {
+    const link = this.data.paper && this.data.paper.link ? this.data.paper.link : "";
+    if (!link) {
+      wx.showToast({ title: "暂无可复制链接", icon: "none" });
+      return;
+    }
+    wx.setClipboardData({
+      data: link,
+      success: () => {
+        wx.showToast({ title: "链接已复制", icon: "success" });
+      },
+    });
+  },
 
-  }
-})
+  onOpenLink() {
+    const link = this.data.paper && this.data.paper.link ? this.data.paper.link : "";
+    if (!link) {
+      wx.showToast({ title: "暂无可打开链接", icon: "none" });
+      return;
+    }
+    wx.setClipboardData({
+      data: link,
+      success: () => {
+        wx.showModal({
+          title: "链接已复制",
+          content: "已复制论文链接，你可以在浏览器中打开。",
+          showCancel: false,
+        });
+      },
+    });
+  },
+});

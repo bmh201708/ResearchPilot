@@ -52,6 +52,8 @@ services:
       WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
+      SEMANTIC_SCHOLAR_API_KEY: ${SEMANTIC_SCHOLAR_API_KEY:-}
+      DEFAULT_FEED_KEYWORDS: ${DEFAULT_FEED_KEYWORDS:-large language model, retrieval augmented generation, computer vision}
     depends_on:
       postgres:
         condition: service_healthy

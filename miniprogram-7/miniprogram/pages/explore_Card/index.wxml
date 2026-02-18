@@ -1,4 +1,3 @@
-<!--pages/explore_Card/index.wxml-->
 <view class="container">
   <view class="nav-bar">
     <view class="brand">
@@ -10,8 +9,7 @@
       </view>
       <text class="brand-text">INSIGHT DIGEST</text>
     </view>
-    
-<view class="top-btns" bindtap="onSwitchToExplore">
+    <view class="top-btns" bindtap="onSwitchToExplore">
       <view class="icon-btn">
         <image class="btn-image" src="/images/explore/change.png" mode="aspectFit"></image>
       </view>
@@ -23,50 +21,81 @@
     <view class="title-line highlight">Reads</view>
   </view>
 
-  <view class="main-card" bindtap="onCardClick">
-    <view class="card-header">
-      <view class="key-tag">
-        <text class="star">★</text>
-        <text>KEY INSIGHTS</text>
-      </view>
-      <view class="bookmark">🔖</view>
-    </view>
+  <view class="search-panel">
+    <input
+      class="search-input"
+      type="text"
+      value="{{keywords}}"
+      bindinput="onKeywordInput"
+      bindconfirm="onSearchTap"
+      confirm-type="search"
+      placeholder="输入关键词检索论文，留空使用默认关键词"
+    />
+    <button class="search-btn" loading="{{isLoading}}" bindtap="onSearchTap">搜索</button>
+  </view>
+  <view class="search-meta">
+    <text class="search-meta-text">当前关键词：{{appliedKeywords || "默认关键词"}}</text>
+  </view>
+  <view wx:if="{{source==='local_cache'}}" class="search-warning">
+    Semantic Scholar 限流，已自动回退到本地缓存
+  </view>
 
-    <view class="card-body">
-      <view class="main-title">Future of Human-Computer Interaction</view>
-      <text class="sub-desc">A concise summary of emerging trends in HCI, including advancements in haptic feedback, neuro-interfaces, and ambient intelligence,...</text>
-    </view>
+  <view wx:if="{{isLoading}}" class="state-text">正在获取推荐论文...</view>
+  <view wx:elif="{{errorMsg}}" class="state-text state-error">{{errorMsg}}</view>
+  <view wx:elif="{{!leadPaper}}" class="state-text">暂无结果，换个关键词试试</view>
 
-    <view class="info-panel">
-      <view class="panel-row">
-        <view class="stat-item">
-          <text class="stat-label">DIGEST IN</text>
-          <view class="stat-value">5 <text class="unit">min</text></view>
+  <block wx:else>
+    <view class="main-card" bindtap="onCardClick" data-id="{{leadPaper.id}}">
+      <view class="card-header">
+        <view class="key-tag">
+          <text class="star">★</text>
+          <text>KEY PAPER</text>
         </view>
-        <view class="divider"></view>
-        <view class="stat-item rating-item">
-          <text class="stat-label">USER RATING</text>
-          <view class="rating-box">
-            <view class="progress-mini"><view class="fill" style="width: 70%;"></view></view>
-            <text class="rating-text">4.2 ★</text>
+        <view class="bookmark">{{leadPaper.yearText}}</view>
+      </view>
+
+      <view class="card-body">
+        <view class="main-title">{{leadPaper.title}}</view>
+        <text class="sub-desc">{{leadPaper.abstractShort}}</text>
+      </view>
+
+      <view class="info-panel">
+        <view class="panel-row">
+          <view class="stat-item">
+            <text class="stat-label">AUTHORS</text>
+            <view class="authors-value">{{leadPaper.authorsText}}</view>
+          </view>
+          <view class="divider"></view>
+          <view class="stat-item rating-item">
+            <text class="stat-label">CITATIONS</text>
+            <view class="rating-box">
+              <text class="rating-text">{{leadPaper.citationText}}</text>
+            </view>
           </view>
         </view>
-      </view>
-      
-      <view class="full-summary-btn">
-        <text>FULL SUMMARY</text>
-        <text class="arrow">↗</text>
-      </view>
-    </view>
-  </view>
 
-  <view class="tabs-container">
-    <view class="tab-pill active">All</view>
-    <view class="tab-pill">
-      <view class="dot pink"></view> Summaries
+        <view class="full-summary-btn">
+          <text>OPEN DETAIL</text>
+          <text class="arrow">↗</text>
+        </view>
+      </view>
     </view>
-    <view class="tab-pill">
-      <view class="dot teal"></view> Short Reads
+
+    <view class="tabs-container">
+      <view class="tab-pill active">Total {{papers.length}}</view>
+      <view class="tab-pill">
+        <view class="dot pink"></view> Recommended
+      </view>
     </view>
-  </view>
+
+    <view class="list-container">
+      <view class="list-card" wx:for="{{restPapers}}" wx:key="id" bindtap="onPaperTap" data-id="{{item.id}}">
+        <view class="list-title">{{item.title}}</view>
+        <view class="list-meta">
+          <text class="list-author">{{item.authorsText}}</text>
+          <text class="list-year">{{item.yearText}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
 </view>

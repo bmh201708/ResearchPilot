@@ -1,79 +1,51 @@
 <view class="container">
+  <view wx:if="{{isLoading}}" class="state-text">正在加载论文详情...</view>
+  <view wx:elif="{{errorMsg}}" class="state-text state-error">{{errorMsg}}</view>
 
-<view class="hero-section">
-  <view class="hero-image-placeholder">
-    <view class="icon-tree"></view>
-  </view>
-</view>
-
-<view class="tag-row">
-  <view class="tag green">ECOLOGY</view>
-  <view class="tag white">
-    <view class="icon-clock"></view> 2H AGO
-  </view>
-</view>
-
-<view class="page-title">Urban Biodiversity Patterns</view>
-
-<view class="author-row">
-  <view class="author-info">
-    <view class="avatar-circle">
-      <view class="avatar-img"></view>
+  <view wx:elif="{{paper}}" class="paper-wrap">
+    <view class="badge-row">
+      <text class="badge">PAPER DETAIL</text>
+      <text class="date-text">{{paper.publishedText}}</text>
     </view>
-    <view class="author-text">
-      <text class="name">Dr. Sarah Jenks</text>
-      <text class="role">PRIMARY AUTHOR</text>
+
+    <view class="title">{{paper.title}}</view>
+
+    <view class="meta-row">
+      <view class="meta-item" wx:if="{{paper.year}}">
+        <text class="meta-label">Year</text>
+        <text class="meta-value">{{paper.year}}</text>
+      </view>
+      <view class="meta-item">
+        <text class="meta-label">Citations</text>
+        <text class="meta-value">{{paper.citationCount}}</text>
+      </view>
+      <view class="meta-item" wx:if="{{paper.venue}}">
+        <text class="meta-label">Venue</text>
+        <text class="meta-value venue">{{paper.venue}}</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">Authors</view>
+      <view class="card-content">{{paper.authorsText}}</view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">Abstract</view>
+      <view class="card-content">{{paper.abstract}}</view>
+    </view>
+
+    <view class="card" wx:if="{{paper.link}}">
+      <view class="card-title">Link</view>
+      <view class="link-text">{{paper.link}}</view>
+      <view class="action-row">
+        <button class="action-btn" bindtap="onCopyLink">复制链接</button>
+        <button class="action-btn action-btn-dark" bindtap="onOpenLink">打开提示</button>
+      </view>
+    </view>
+
+    <view class="tag-row" wx:if="{{paper.tags.length}}">
+      <view class="tag" wx:for="{{paper.tags}}" wx:key="index">{{item}}</view>
     </view>
   </view>
-  
-  <view class="plus-btn">+</view>
-</view>
-
-<view class="divider"></view>
-
-<view class="card abstract-card">
-  <view class="card-header">
-    <view class="icon-box cyan">❝</view>
-    <text class="card-title">Abstract</text>
-  </view>
-  <view class="card-content">
-    This study investigates the correlation between <text class="highlight-text">green infrastructure</text> types and biodiversity metrics in 15 metropolitan areas. Our findings suggest that interconnected micro-habitats significantly outperform isolated green spaces in sustaining pollinator populations.
-  </view>
-</view>
-
-<view class="section-header">
-  <text class="section-title">Core Insights</text>
-  
-  <view class="pill-badge">3 Key Points</view>
-</view>
-
-<view class="card insight-card">
-  <view class="insight-icon-wrapper orange-bg">
-    <view class="emoji-icon">✨</view>
-  </view>
-  <view class="insight-content">
-    <text class="insight-title">Micro-habitat Connectivity</text>
-    <text class="insight-desc">Small, connected green patches support 40% more species than large isolated parks.</text>
-  </view>
-</view>
-
-<view class="card insight-card">
-  <view class="insight-icon-wrapper pink-bg">
-    <view class="emoji-icon">🐞</view>
-  </view>
-  <view class="insight-content">
-    <text class="insight-title">Pollinator Diversity</text>
-    <text class="insight-desc">Native flowering plants in urban settings increase wild bee diversity by 3x compared to ornamentals.</text>
-  </view>
-</view>
-
-<view style="height: 180rpx;"></view>
-<view class="bottom-bar-container">
-  <view class="bottom-bar">
-    <view class="action-btn share"><view class="icon-share">↑</view></view>
-    <view class="action-btn main-btn"><view class="icon-bookmark">🏷</view> Save to Library</view>
-    <view class="action-btn more"><text>•••</text></view>
-  </view>
-</view>
-
 </view>

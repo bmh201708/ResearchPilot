@@ -1,100 +1,120 @@
-// pages/explore_Card/index.js
+const app = getApp();
+const { request } = require("../../utils/request");
+
+function normalizePaper(item) {
+  const authors = Array.isArray(item.authors) ? item.authors : [];
+  const shortAbstract = (item.abstract || "").trim().slice(0, 180);
+  return {
+    id: item.id,
+    title: item.title || "Untitled Paper",
+    abstractShort: shortAbstract || "No abstract available.",
+    authorsText: authors.slice(0, 4).join(", ") || "Unknown authors",
+    yearText: item.year ? `${item.year}` : "Latest",
+    citationText: `${item.citationCount || 0} citations`,
+  };
+}
+
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    keywords: "",
+    appliedKeywords: "",
+    papers: [],
+    leadPaper: null,
+    restPapers: [],
+    isLoading: false,
+    errorMsg: "",
+    source: "",
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-
+    const fromQuery = decodeURIComponent(options.keywords || "");
+    const keywords = fromQuery || app.globalData.exploreKeywords || "";
+    this.setData({ keywords });
+    this.fetchPapers(keywords);
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
   onPullDownRefresh() {
-
+    this.fetchPapers(this.data.keywords, { stopPullDown: true });
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
+  onKeywordInput(e) {
+    this.setData({ keywords: e.detail.value || "" });
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
+  onSearchTap() {
+    this.fetchPapers(this.data.keywords);
   },
 
-  /**
-   * 跳转到发现页 (TabBar页面)
-   * 注意：跳转到 TabBar 页面必须使用 wx.switchTab
-   */
-  onSwitchToExplore: function() {
-    wx.switchTab({
-      url: '/pages/explore/index',
-      success: function() {
-        console.log('跳转成功');
-      },
-      fail: function(err) {
-        console.error('跳转失败，请检查 app.json 中是否配置了该 TabBar 路径', err);
-        
-        // 容错处理：如果不是 TabBar 页面，尝试普通跳转
-        // wx.navigateTo({ url: '/pages/explore/index' });
+  async fetchPapers(rawKeywords, options = {}) {
+    const keywords = (rawKeywords || "").trim();
+    const query = [
+      "page=1",
+      "pageSize=8",
+      keywords ? `keywords=${encodeURIComponent(keywords)}` : "",
+    ]
+      .filter(Boolean)
+      .join("&");
+
+    this.setData({ isLoading: true, errorMsg: "" });
+    try {
+      const resp = await request({
+        url: `/papers/feed?${query}`,
+        method: "GET",
+        auth: true,
+      });
+      const papers = (resp.items || []).map(normalizePaper);
+      const leadPaper = papers.length ? papers[0] : null;
+      const restPapers = papers.slice(1);
+
+      app.globalData.exploreKeywords = keywords;
+      this.setData({
+        papers,
+        leadPaper,
+        restPapers,
+        appliedKeywords:
+          (resp.meta && resp.meta.appliedKeywords) || keywords || "",
+        source: (resp.meta && resp.meta.source) || "",
+      });
+    } catch (err) {
+      if (err.statusCode === 401 || err.message === "missing_token") {
+        wx.removeStorageSync("token");
+        wx.removeStorageSync("user");
+        wx.reLaunch({ url: "/pages/login/login" });
+        return;
       }
+      this.setData({ errorMsg: "获取论文失败，请稍后重试" });
+    } finally {
+      this.setData({ isLoading: false });
+      if (options.stopPullDown) {
+        wx.stopPullDownRefresh();
+      }
+    }
+  },
+
+  onSwitchToExplore() {
+    app.globalData.exploreKeywords = (this.data.keywords || "").trim();
+    wx.switchTab({
+      url: "/pages/explore/index",
+      fail: (err) => {
+        console.error("跳转失败，请检查 app.json 中是否配置了该 TabBar 路径", err);
+      },
     });
   },
 
-  /**
-   * 新增：主卡片点击跳转
-   * 跳转到普通页面 pages/paper/detail
-   */
-  onCardClick: function() {
+  onCardClick(e) {
+    const paperId = e.currentTarget && e.currentTarget.dataset
+      ? e.currentTarget.dataset.id
+      : "";
+    if (!paperId) return;
     wx.navigateTo({
-      url: '/pages/paper/detail',
+      url: `/pages/paper/detail?id=${encodeURIComponent(paperId)}`,
       fail: (err) => {
         console.error("详情页跳转失败，请检查 app.json 是否注册了该页面", err);
-      }
+      },
     });
   },
 
-  
-})
+  onPaperTap(e) {
+    this.onCardClick(e);
+  },
+});
