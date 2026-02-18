@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaperActionType {
+  PASS
+  MARK
+  READ
+}
+
+enum CommentStatus {
+  VISIBLE
+  HIDDEN
+  REVIEW
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+}
+
+enum AiJobType {
+  SUMMARY
+  POLISH
+  REBUTTAL
+}
+
+enum AiJobStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id          String            @id @default(cuid())
+  openid      String            @unique
+  nickname    String?
+  avatarUrl   String?           @map("avatar_url")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  preference  UserPreference?
+  paperAction UserPaperAction[]
+  comments    Comment[]
+  missions    Mission[]
+  aiJobs      AiJob[]
+  badges      UserBadge[]
+
+  @@map("users")
+}
+
+model UserPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique @map("user_id")
+  domains           Json
+  targetConferences Json     @map("target_conferences")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Paper {
+  id          String            @id @default(cuid())
+  arxivId     String            @unique @map("arxiv_id")
+  title       String
+  authors     Json
+  abstract    String
+  publishedAt DateTime          @map("published_at")
+  tags        Json
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  summary     PaperSummary?
+  actions     UserPaperAction[]
+  comments    Comment[]
+
+  @@index([publishedAt], map: "idx_papers_published_at")
+  @@map("papers")
+}
+
+model PaperSummary {
+  id            String   @id @default(cuid())
+  paperId       String   @unique @map("paper_id")
+  summaryBg     String   @map("summary_bg")
+  summaryMethod String   @map("summary_method")
+  summaryContrib String  @map("summary_contrib")
+  modelName     String?  @map("model_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  paper         Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@map("paper_summaries")
+}
+
+model UserPaperAction {
+  id        String          @id @default(cuid())
+  userId    String          @map("user_id")
+  paperId   String          @map("paper_id")
+  action    PaperActionType
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paper     Paper           @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, paperId], map: "uq_user_paper_action")
+  @@index([userId, createdAt], map: "idx_user_paper_actions_user_created_at")
+  @@map("user_paper_actions")
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  paperId   String        @map("paper_id")
+  userId    String        @map("user_id")
+  content   String
+  status    CommentStatus @default(VISIBLE)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  paper     Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([paperId, createdAt], map: "idx_comments_paper_created_at")
+  @@map("comments")
+}
+
+model Conference {
+  id               String     @id @default(cuid())
+  name             String
+  year             Int
+  abstractDeadline DateTime?  @map("abstract_deadline")
+  paperDeadline    DateTime   @map("paper_deadline")
+  timezone         String
+  location         String?
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+  missions         Mission[]
+
+  @@unique([name, year], map: "uq_conference_name_year")
+  @@map("conferences")
+}
+
+model Mission {
+  id           String      @id @default(cuid())
+  userId       String      @map("user_id")
+  conferenceId String?     @map("conference_id")
+  title        String
+  deadline     DateTime
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conference   Conference? @relation(fields: [conferenceId], references: [id], onDelete: SetNull)
+  tasks        Task[]
+
+  @@map("missions")
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  missionId String     @map("mission_id")
+  title     String
+  dueAt     DateTime   @map("due_at")
+  status    TaskStatus @default(TODO)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  mission   Mission    @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId, dueAt], map: "idx_tasks_mission_due_at")
+  @@map("tasks")
+}
+
+model AiJob {
+  id           String      @id @default(cuid())
+  userId       String      @map("user_id")
+  jobType      AiJobType   @map("job_type")
+  inputText    String      @map("input_text")
+  status       AiJobStatus @default(PENDING)
+  result       Json?
+  errorMessage String?     @map("error_message")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt], map: "idx_ai_jobs_user_created_at")
+  @@map("ai_jobs")
+}
+
+model UserBadge {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  badgeCode  String   @map("badge_code")
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeCode], map: "uq_user_badges_user_badge")
+  @@map("user_badges")
+}
