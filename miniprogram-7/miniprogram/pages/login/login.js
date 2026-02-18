@@ -62,70 +62,55 @@ Page({
   onWxSignIn() {
     if (this.data.isLoading) return;
 
-    const baseUrl = (app.globalData.apiBaseUrl || "").replace(/\/$/, "");
-    if (!baseUrl) {
-      wx.showToast({
-        title: "未配置后端地址",
-        icon: "none",
-      });
-      return;
-    }
-
     const doWxLogin = (wechatProfile = {}) => {
       wx.login({
-        success: (loginRes) => {
+        success: async (loginRes) => {
           if (!loginRes.code) {
             wx.showToast({ title: "获取登录码失败", icon: "none" });
             this.setData({ isLoading: false });
             return;
           }
 
-          const sendLoginRequest = (retryTimes = 0) => {
+          const sendLoginRequest = async (retryTimes = 0) => {
             let willRetry = false;
-            wx.request({
-              url: `${baseUrl}/auth/wx-login`,
-              method: "POST",
-              timeout: 12000,
-              header: {
-                "Content-Type": "application/json",
-              },
+            try {
+              const resp = await request({
+                url: "/auth/wx-login",
+                method: "POST",
               data: {
                 code: loginRes.code,
                 nickname: wechatProfile.nickname || null,
                 avatarUrl: wechatProfile.avatarUrl || null,
               },
-              success: (res) => {
-                if (res.statusCode === 200 && res.data && res.data.token) {
-                  this.saveAuthAndJump(res.data);
-                  return;
-                }
-
-                if (res.statusCode === 502 && retryTimes < 1) {
-                  willRetry = true;
-                  setTimeout(() => sendLoginRequest(retryTimes + 1), 800);
-                  return;
-                }
-
+              });
+              this.saveAuthAndJump(resp);
+            } catch (err) {
+              if (err.statusCode === 502 && retryTimes < 1) {
+                willRetry = true;
+                setTimeout(() => {
+                  sendLoginRequest(retryTimes + 1);
+                }, 800);
+                return;
+              }
+              if (err.statusCode) {
                 const msg =
-                  (res.data && res.data.message) || `微信登录失败(${res.statusCode})`;
+                  err?.response?.message || `微信登录失败(${err.statusCode})`;
                 wx.showToast({
                   title: msg,
                   icon: "none",
                 });
-              },
-              fail: (err) => {
+              } else {
                 console.error("请求微信登录接口失败", err);
                 wx.showToast({
                   title: "网络异常，请稍后重试",
                   icon: "none",
                 });
-              },
-              complete: () => {
-                if (!willRetry) {
-                  this.setData({ isLoading: false });
-                }
-              },
-            });
+              }
+            } finally {
+              if (!willRetry) {
+                this.setData({ isLoading: false });
+              }
+            }
           };
 
           sendLoginRequest(0);
