@@ -2,6 +2,14 @@
 const app = getApp();
 const { request } = require("../../utils/request");
 
+function isWechatProfileIncomplete(user) {
+  const authProvider = (user?.authProvider || "").toUpperCase();
+  if (authProvider !== "WECHAT") return false;
+  const nickname = (user?.nickname ? String(user.nickname).trim() : "") || "";
+  const avatarUrl = (user?.avatarUrl ? String(user.avatarUrl).trim() : "") || "";
+  return !nickname || nickname === "微信用户" || !avatarUrl;
+}
+
 Page({
   data: {
     isLoading: false,
@@ -17,10 +25,26 @@ Page({
     this.setData({ password: e.detail.value || "" });
   },
 
-  saveAuthAndJump(authData) {
+  saveAuth(authData) {
     wx.setStorageSync("token", authData.token);
     wx.setStorageSync("user", authData.user || {});
     app.globalData.user = authData.user || null;
+  },
+
+  routeAfterLogin(authData) {
+    this.saveAuth(authData);
+    if (isWechatProfileIncomplete(authData?.user || {})) {
+      wx.redirectTo({
+        url: "/pages/wx_profile_setup/index",
+        fail: () => {
+          wx.navigateTo({
+            url: "/pages/wx_profile_setup/index",
+          });
+        },
+      });
+      return;
+    }
+
     wx.switchTab({
       url: "/pages/lab/index",
     });
@@ -46,7 +70,7 @@ Page({
         method: "POST",
         data: { email, password },
       });
-      this.saveAuthAndJump(resp);
+      this.routeAfterLogin(resp);
     } catch (err) {
       if (err.statusCode === 401) {
         wx.showToast({ title: "账号或密码错误", icon: "none" });
@@ -83,7 +107,7 @@ Page({
                 avatarUrl: wechatProfile.avatarUrl || null,
               },
               });
-              this.saveAuthAndJump(resp);
+              this.routeAfterLogin(resp);
             } catch (err) {
               if (err.statusCode === 502 && retryTimes < 1) {
                 willRetry = true;

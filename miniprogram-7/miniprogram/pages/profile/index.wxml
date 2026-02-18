@@ -21,28 +21,6 @@
     <text class="user-bio">{{userBio}}</text>
   </view>
 
-  <view class="wx-editor-card" wx:if="{{showWxProfileEditor}}">
-    <text class="wx-editor-title">完善微信资料</text>
-    <text class="wx-editor-desc">微信登录默认可能显示“微信用户”，请手动填写昵称和头像。</text>
-
-    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-      <image class="avatar-btn-img" src="{{editAvatarUrl}}" mode="aspectFill"></image>
-      <text class="avatar-btn-text">选择头像</text>
-    </button>
-
-    <input
-      class="nickname-input"
-      type="nickname"
-      placeholder="请输入昵称"
-      value="{{editNickname}}"
-      bindinput="onEditNicknameInput"
-    />
-
-    <button class="save-wx-btn" loading="{{isSavingWxProfile}}" bindtap="onSaveWxProfile">
-      保存资料
-    </button>
-  </view>
-
   <view class="stats-grid">
     <view class="stat-card">
       <view class="stat-header">

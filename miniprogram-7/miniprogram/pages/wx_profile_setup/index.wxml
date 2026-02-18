@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="card">
+    <text class="title">完善微信资料</text>
+    <text class="desc">首次微信登录需要补充昵称和头像，用于你的个人资料展示。</text>
+
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image class="avatar-img" src="{{displayAvatarUrl}}" mode="aspectFill"></image>
+      <text class="avatar-text">选择头像</text>
+    </button>
+
+    <input
+      class="nickname-input"
+      type="nickname"
+      placeholder="请输入昵称"
+      value="{{nickname}}"
+      bindinput="onEditNicknameInput"
+    />
+
+    <button class="save-btn" loading="{{isSaving}}" bindtap="onSaveProfile">
+      保存并进入
+    </button>
+  </view>
+</view>

@@ -2,6 +2,7 @@
   "pages": [
     "pages/login/login",
     "pages/register/register",
+    "pages/wx_profile_setup/index",
     "pages/lab/index",
     "pages/explore/index",
     "pages/explore_Card/index",
