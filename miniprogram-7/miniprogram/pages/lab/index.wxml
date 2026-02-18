@@ -35,7 +35,7 @@
     </view>
     
     <view class="card-body">
-      <text class="card-title">Rebuttal Simulator</text>
+      <text class="card-title">Review Simulator</text>
       <text class="card-desc">Simulate peer review feedback using advanced LLMs trained on top-tier journals.</text>
     </view>
 
@@ -45,7 +45,7 @@
         <view class="avatar bg-pink"><text>R</text></view>
         <view class="avatar bg-gray"><text>+4</text></view>
       </view>
-      <button class="btn-launch">
+      <button class="btn-launch" bindtap="onLaunchReviewSimulator">
         LAUNCH <text class="arrow">→</text>
       </button>
     </view>

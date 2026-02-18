@@ -1,16 +1,20 @@
 import crypto from "node:crypto";
 import express from "express";
 import jwt from "jsonwebtoken";
+import pdfParse from "pdf-parse";
 import { Pool } from "pg";
 
 const app = express();
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "80mb" }));
 
 const port = Number(process.env.PORT || 3000);
 const jwtSecret = process.env.JWT_SECRET || "change_this_jwt_secret";
 const wechatAppId = process.env.WECHAT_APP_ID || "";
 const wechatAppSecret = process.env.WECHAT_APP_SECRET || "";
 const semanticScholarApiKey = process.env.SEMANTIC_SCHOLAR_API_KEY || "";
+const llmApiKey = process.env.LLM_API_KEY || "";
+const llmBaseUrl = process.env.LLM_BASE_URL || "https://api-inference.modelscope.cn";
+const reviewModelName = process.env.REVIEW_MODEL_NAME || "deepseek-ai/DeepSeek-V3.2";
 const defaultFeedKeywords =
   process.env.DEFAULT_FEED_KEYWORDS ||
   "large language model, retrieval augmented generation, computer vision";
@@ -20,6 +24,13 @@ const pool = new Pool({
 });
 const PAPER_ACTION_TYPES = new Set(["PASS", "MARK", "READ"]);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SUPPORTED_MANUSCRIPT_EXTENSIONS = new Set(["pdf", "txt", "md"]);
+const MAX_MANUSCRIPT_BASE64_CHARS = 70 * 1024 * 1024;
+const MAX_REMOTE_MANUSCRIPT_BYTES = 55 * 1024 * 1024;
+const MAX_MANUSCRIPT_CHARS_FOR_REVIEW = 24000;
+const ALLOWED_REMOTE_HOST_SUFFIXES = [".myqcloud.com", ".tcb.qcloud.la"];
+const REVIEW_TASK_TTL_MS = 2 * 60 * 60 * 1000;
+const reviewTasks = new Map();
 
 function parsePositiveInt(value, fallback, max = 100) {
   const parsed = Number.parseInt(String(value ?? ""), 10);
@@ -85,6 +96,331 @@ function isAllowedAvatarUrl(value) {
   if (!value || typeof value !== "string") return false;
   if (value.startsWith("http://") || value.startsWith("https://")) return true;
   return /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(value);
+}
+
+function createHttpError(status, message, detail = null) {
+  const err = new Error(message);
+  err.status = status;
+  err.publicMessage = message;
+  err.detail = detail;
+  return err;
+}
+
+function buildLlmChatCompletionsUrl(rawBaseUrl) {
+  const base = String(rawBaseUrl || "").trim().replace(/\/+$/, "");
+  if (!base) return "https://api-inference.modelscope.cn/v1/chat/completions";
+  if (/\/v1\/chat\/completions$/i.test(base)) return base;
+  if (/\/v1$/i.test(base)) return `${base}/chat/completions`;
+  return `${base}/v1/chat/completions`;
+}
+
+function extFromFileName(fileName = "") {
+  const safe = String(fileName || "").trim().toLowerCase();
+  if (!safe.includes(".")) return "";
+  return safe.split(".").pop() || "";
+}
+
+function decodeBase64Buffer(contentBase64) {
+  if (typeof contentBase64 !== "string" || !contentBase64.trim()) {
+    throw createHttpError(400, "invalid_content_base64");
+  }
+  if (contentBase64.length > MAX_MANUSCRIPT_BASE64_CHARS) {
+    throw createHttpError(400, "manuscript_too_large");
+  }
+
+  try {
+    const buffer = Buffer.from(contentBase64.trim(), "base64");
+    if (!buffer || !buffer.length) {
+      throw new Error("empty_buffer");
+    }
+    return buffer;
+  } catch {
+    throw createHttpError(400, "invalid_content_base64");
+  }
+}
+
+function isAllowedRemoteManuscriptHost(hostname = "") {
+  const host = String(hostname || "").toLowerCase();
+  if (!host) return false;
+  return ALLOWED_REMOTE_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix));
+}
+
+async function fetchRemoteFileBuffer(fileUrl) {
+  let urlObj;
+  try {
+    urlObj = new URL(String(fileUrl || "").trim());
+  } catch {
+    throw createHttpError(400, "invalid_file_url");
+  }
+
+  if (urlObj.protocol !== "https:") {
+    throw createHttpError(400, "invalid_file_url_protocol");
+  }
+  if (!isAllowedRemoteManuscriptHost(urlObj.hostname)) {
+    throw createHttpError(400, "invalid_file_url_host");
+  }
+
+  const resp = await fetch(urlObj.toString(), { method: "GET" });
+  if (!resp.ok) {
+    throw createHttpError(400, "file_download_failed", `http_${resp.status}`);
+  }
+
+  const contentLength = Number(resp.headers.get("content-length") || "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_REMOTE_MANUSCRIPT_BYTES) {
+    throw createHttpError(400, "manuscript_too_large");
+  }
+
+  const arrayBuffer = await resp.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  if (!buffer.length) {
+    throw createHttpError(400, "manuscript_content_empty");
+  }
+  if (buffer.length > MAX_REMOTE_MANUSCRIPT_BYTES) {
+    throw createHttpError(400, "manuscript_too_large");
+  }
+  return buffer;
+}
+
+async function extractManuscriptText({
+  fileName,
+  mimeType,
+  extension,
+  contentBase64,
+  fileUrl,
+}) {
+  const derivedExt = String(extension || "").toLowerCase() || extFromFileName(fileName);
+  if (!SUPPORTED_MANUSCRIPT_EXTENSIONS.has(derivedExt)) {
+    throw createHttpError(400, "unsupported_file_type");
+  }
+
+  let buffer;
+  if (typeof contentBase64 === "string" && contentBase64.trim()) {
+    buffer = decodeBase64Buffer(contentBase64);
+  } else if (typeof fileUrl === "string" && fileUrl.trim()) {
+    buffer = await fetchRemoteFileBuffer(fileUrl);
+  } else {
+    throw createHttpError(400, "invalid_payload");
+  }
+
+  const normalizedMimeType = String(mimeType || "").toLowerCase();
+
+  let manuscriptText = "";
+  if (derivedExt === "pdf" || normalizedMimeType.includes("pdf")) {
+    try {
+      const parsed = await pdfParse(buffer);
+      manuscriptText = String(parsed?.text || "");
+    } catch (err) {
+      throw createHttpError(400, "pdf_parse_failed", String(err?.message || err));
+    }
+  } else {
+    manuscriptText = buffer.toString("utf8");
+  }
+
+  const cleaned = manuscriptText
+    .replace(/\u0000/g, "")
+    .replace(/\r/g, "")
+    .trim();
+  if (!cleaned || cleaned.length < 60) {
+    throw createHttpError(400, "manuscript_content_too_short");
+  }
+
+  return {
+    text: cleaned.slice(0, MAX_MANUSCRIPT_CHARS_FOR_REVIEW),
+    extension: derivedExt,
+  };
+}
+
+function parseJsonFromLlmContent(content) {
+  const raw = String(content || "").trim();
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {}
+
+  const markdownJsonMatch = raw.match(/```json\s*([\s\S]*?)```/i);
+  if (markdownJsonMatch?.[1]) {
+    try {
+      return JSON.parse(markdownJsonMatch[1].trim());
+    } catch {}
+  }
+
+  const firstBrace = raw.indexOf("{");
+  const lastBrace = raw.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const jsonLike = raw.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(jsonLike);
+    } catch {}
+  }
+
+  return null;
+}
+
+function normalizeStringArray(input, maxLength = 5) {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .slice(0, maxLength);
+}
+
+function normalizeDecision(value) {
+  const lower = String(value || "").toLowerCase();
+  if (lower.includes("reject")) return "REJECT";
+  if (lower.includes("accept")) return "ACCEPT";
+  return "REJECT";
+}
+
+function normalizeScore(value) {
+  let n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  if (n > 10 && n <= 100) n /= 10;
+  return Math.max(0, Math.min(10, Number(n.toFixed(1))));
+}
+
+function normalizeReviewResult(rawResult) {
+  const raw = rawResult || {};
+  return {
+    decision: normalizeDecision(raw.decision),
+    score: normalizeScore(raw.score),
+    summary: String(raw.summary || "").trim(),
+    strengths: normalizeStringArray(raw.strengths),
+    weaknesses: normalizeStringArray(raw.weaknesses),
+    suggestions: normalizeStringArray(raw.suggestions),
+  };
+}
+
+function purgeExpiredReviewTasks() {
+  const now = Date.now();
+  for (const [taskId, task] of reviewTasks.entries()) {
+    const updatedAtMs = new Date(task.updatedAt).getTime();
+    if (!Number.isFinite(updatedAtMs)) continue;
+    if (now - updatedAtMs > REVIEW_TASK_TTL_MS) {
+      reviewTasks.delete(taskId);
+    }
+  }
+}
+
+function buildReviewTaskPayload(task) {
+  return {
+    taskId: task.taskId,
+    status: task.status,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    fileName: task.fileName,
+    error: task.error || null,
+    review: task.review || null,
+  };
+}
+
+function createReviewTask({ userId, fileName, mimeType, extension, fileUrl }) {
+  purgeExpiredReviewTasks();
+  const nowIso = new Date().toISOString();
+  const taskId = crypto.randomUUID();
+  const task = {
+    taskId,
+    userId,
+    fileName,
+    mimeType,
+    extension,
+    fileUrl,
+    status: "PENDING",
+    error: null,
+    review: null,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+  reviewTasks.set(taskId, task);
+  return task;
+}
+
+async function runReviewTask(taskId) {
+  const task = reviewTasks.get(taskId);
+  if (!task) return;
+
+  task.status = "RUNNING";
+  task.updatedAt = new Date().toISOString();
+
+  try {
+    const manuscript = await extractManuscriptText({
+      fileName: task.fileName,
+      mimeType: task.mimeType,
+      extension: task.extension,
+      fileUrl: task.fileUrl,
+    });
+    const review = await generateAiReviewFromManuscript(manuscript.text);
+    task.status = "DONE";
+    task.review = review;
+    task.error = null;
+    task.updatedAt = new Date().toISOString();
+  } catch (err) {
+    task.status = "FAILED";
+    task.error = err?.publicMessage || "review_simulation_failed";
+    task.updatedAt = new Date().toISOString();
+  }
+}
+
+async function generateAiReviewFromManuscript(manuscriptText) {
+  if (!llmApiKey) {
+    throw createHttpError(500, "llm_config_missing");
+  }
+
+  const endpoint = buildLlmChatCompletionsUrl(llmBaseUrl);
+  const resp = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${llmApiKey}`,
+    },
+    body: JSON.stringify({
+      model: reviewModelName,
+      temperature: 0.2,
+      max_tokens: 1200,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a strict but constructive academic reviewer. Reply with JSON only.",
+        },
+        {
+          role: "user",
+          content: `Review this manuscript and return JSON with fields: decision (ACCEPT or REJECT), score (0-10), summary, strengths (array), weaknesses (array), suggestions (array).\n\nManuscript:\n${manuscriptText}`,
+        },
+      ],
+    }),
+  });
+
+  const text = await resp.text();
+  let payload = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = {};
+    }
+  }
+
+  if (!resp.ok) {
+    const providerError =
+      payload?.error?.message || payload?.message || `llm_http_${resp.status}`;
+    throw createHttpError(502, "llm_request_failed", providerError);
+  }
+
+  let content = payload?.choices?.[0]?.message?.content;
+  if (Array.isArray(content)) {
+    content = content.map((item) => item?.text || "").join("\n");
+  }
+  if (typeof content !== "string") {
+    content = payload?.choices?.[0]?.text || "";
+  }
+
+  const parsed = parseJsonFromLlmContent(content);
+  if (!parsed) {
+    throw createHttpError(502, "llm_response_invalid");
+  }
+
+  return normalizeReviewResult(parsed);
 }
 
 function buildPublishedAt(publicationDate, year) {
@@ -1073,6 +1409,98 @@ app.get("/profile/dashboard", authMiddleware, async (req, res) => {
     return res.status(500).json({
       message: "profile_dashboard_failed",
       detail: String(err?.message || err),
+    });
+  }
+});
+
+app.post("/lab/review-simulator/tasks", authMiddleware, async (req, res) => {
+  try {
+    const fileName = String(req.body?.fileName || "").trim();
+    const mimeType = String(req.body?.mimeType || "").trim();
+    const extension = String(req.body?.extension || "").trim();
+    const fileUrl = String(req.body?.fileUrl || "").trim();
+
+    if (!fileName || !fileUrl) {
+      return res.status(400).json({ message: "invalid_payload" });
+    }
+
+    const derivedExt = extension || extFromFileName(fileName);
+    if (!SUPPORTED_MANUSCRIPT_EXTENSIONS.has(String(derivedExt || "").toLowerCase())) {
+      return res.status(400).json({ message: "unsupported_file_type" });
+    }
+
+    const task = createReviewTask({
+      userId: req.auth.userId,
+      fileName,
+      mimeType,
+      extension: derivedExt,
+      fileUrl,
+    });
+
+    runReviewTask(task.taskId).catch(() => {});
+
+    return res.status(202).json({
+      task: buildReviewTaskPayload(task),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "review_task_create_failed",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
+app.get("/lab/review-simulator/tasks/:taskId", authMiddleware, async (req, res) => {
+  const taskId = String(req.params?.taskId || "").trim();
+  if (!taskId) {
+    return res.status(400).json({ message: "invalid_task_id" });
+  }
+
+  const task = reviewTasks.get(taskId);
+  if (!task || task.userId !== req.auth.userId) {
+    return res.status(404).json({ message: "task_not_found" });
+  }
+
+  return res.status(200).json({
+    task: buildReviewTaskPayload(task),
+  });
+});
+
+app.post("/lab/review-simulator", authMiddleware, async (req, res) => {
+  try {
+    const fileName = String(req.body?.fileName || "").trim();
+    const mimeType = String(req.body?.mimeType || "").trim();
+    const extension = String(req.body?.extension || "").trim();
+    const contentBase64 = String(req.body?.contentBase64 || "");
+    const fileUrl = String(req.body?.fileUrl || "").trim();
+
+    if (!fileName || (!contentBase64 && !fileUrl)) {
+      return res.status(400).json({ message: "invalid_payload" });
+    }
+
+    const manuscript = await extractManuscriptText({
+      fileName,
+      mimeType,
+      extension,
+      contentBase64,
+      fileUrl,
+    });
+    const review = await generateAiReviewFromManuscript(manuscript.text);
+
+    return res.status(200).json({
+      review,
+      meta: {
+        model: reviewModelName,
+        endpoint: buildLlmChatCompletionsUrl(llmBaseUrl),
+        inputChars: manuscript.text.length,
+        fileType: manuscript.extension,
+      },
+    });
+  } catch (err) {
+    const status = err?.status || 500;
+    return res.status(status).json({
+      message: err?.publicMessage || "review_simulation_failed",
+      detail: err?.detail || String(err?.message || err),
     });
   }
 });

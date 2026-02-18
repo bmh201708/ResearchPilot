@@ -1,0 +1,60 @@
+<view class="page">
+  <view class="hero">
+    <text class="title">Review Simulator</text>
+    <text class="desc">上传你的稿件，AI 审稿人将给出评审意见、打分与录用建议。</text>
+  </view>
+
+  <view class="card">
+    <button class="upload-btn" bindtap="onChooseFile">上传稿件 (PDF/TXT/MD)</button>
+    <view class="file-meta" wx:if="{{selectedFileName}}">
+      <text class="file-name">{{selectedFileName}}</text>
+      <text class="file-sub">{{selectedFileSizeText}}</text>
+    </view>
+
+    <button
+      class="start-btn"
+      bindtap="onStartReview"
+      loading="{{isReviewing}}"
+      disabled="{{isReviewing}}"
+    >
+      {{isReviewing ? '审稿中...' : 'Start Review'}}
+    </button>
+    <text class="task-status" wx:if="{{isReviewing}}">任务状态：{{reviewStatus || 'PENDING'}}</text>
+  </view>
+
+  <view class="result-card" wx:if="{{reviewResult}}">
+    <view class="result-top">
+      <text class="decision">{{reviewResult.decision}}</text>
+      <text class="score">Score {{reviewResult.score}} / 10</text>
+    </view>
+
+    <view class="block">
+      <text class="block-title">Summary</text>
+      <text class="block-text">{{reviewResult.summary}}</text>
+    </view>
+
+    <view class="block" wx:if="{{reviewResult.strengths.length}}">
+      <text class="block-title">Strengths</text>
+      <view class="item" wx:for="{{reviewResult.strengths}}" wx:key="*this">
+        <text class="dot">•</text>
+        <text class="item-text">{{item}}</text>
+      </view>
+    </view>
+
+    <view class="block" wx:if="{{reviewResult.weaknesses.length}}">
+      <text class="block-title">Weaknesses</text>
+      <view class="item" wx:for="{{reviewResult.weaknesses}}" wx:key="*this">
+        <text class="dot">•</text>
+        <text class="item-text">{{item}}</text>
+      </view>
+    </view>
+
+    <view class="block" wx:if="{{reviewResult.suggestions.length}}">
+      <text class="block-title">Suggestions</text>
+      <view class="item" wx:for="{{reviewResult.suggestions}}" wx:key="*this">
+        <text class="dot">•</text>
+        <text class="item-text">{{item}}</text>
+      </view>
+    </view>
+  </view>
+</view>
