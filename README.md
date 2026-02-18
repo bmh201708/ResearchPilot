@@ -3,7 +3,7 @@
 微信小程序 + Node.js 后端 + PostgreSQL 的论文探索工具。
 
 <p align="center">
-  <img src="docs/img/tease.png" alt="Research Pilot Tease" width="400" style="border-radius: 16px;" />
+  <img src="miniprogram-7/docs/img/tease.png" alt="Research Pilot Tease" width="400" style="border-radius: 16px;" />
 </p>
 
 ## 项目结构
