@@ -290,7 +290,7 @@ page {
   }
 
   .search-input {
-    flex: 1;
+    flex: 2;
     height: 86rpx;
     background: #ffffff;
     border-radius: 24rpx;
@@ -298,17 +298,24 @@ page {
     font-size: 26rpx;
     box-sizing: border-box;
   }
-
+  
   .search-btn {
+    flex: 1;
     height: 86rpx;
-    min-width: 140rpx;
+    min-width: 160rpx; /* 稍微加宽一点以匹配图片比例 */
     padding: 0 28rpx;
-    border-radius: 24rpx;
-    background: #1a1b2e;
+    /* 修改为全圆角胶囊形状 */
+    border-radius: 43rpx; 
+    /* 使用从左到右的渐变色：青绿 -> 蓝色 */
+    background: linear-gradient(to right, #29d7cb, #6da9e5);
     color: #ffffff;
-    font-size: 24rpx;
-    font-weight: 700;
+    font-size: 28rpx; /* 略微调大字号 */
+    font-weight: 600;
     line-height: 86rpx;
+    /* 去除小程序按钮默认边框 */
+    border: none;
+    /* 添加轻微的阴影让它更有悬浮感（可选） */
+    box-shadow: 0 4rpx 12rpx rgba(109, 169, 229, 0.3);
   }
 
   .search-meta {

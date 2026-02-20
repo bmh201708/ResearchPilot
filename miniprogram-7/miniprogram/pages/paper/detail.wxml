@@ -29,7 +29,7 @@
     </view>
 
     <view class="section-header">
-      <text>Paper Insights</text>
+      <text>Paper Metadata</text>
     </view>
 
     <view class="insight-card">
@@ -47,12 +47,62 @@
         <text class="insight-desc">{{paper.venue || 'ArXiv / Conference'}}</text>
       </view>
     </view>
+    <!-- --- 讨论区 --- -->
+<view class="discussion-section">
+  <view class="discussion-header">
+    <text class="discussion-title">Comments ({{comments.length}})</text>
+    <text class="view-all">View All</text>
+  </view>
 
+  <view 
+    wx:for="{{comments}}" 
+    wx:key="index" 
+    class="comment-card"
+  >
+    <view class="comment-avatar">
+      {{item.initial}}
+    </view>
+
+    <view class="comment-body">
+      <view class="comment-meta">
+        <text class="comment-name">{{item.name}}</text>
+        <text class="comment-time">{{item.time}}</text>
+      </view>
+
+      <view class="comment-text">
+        {{item.content}}
+      </view>
+    </view>
+  </view>
+</view>
     <view class="footer-spacer"></view>
   </view>
 
-  <view class="floating-bar">
+<!-- --- 底部输入栏 --- -->
+<view class="bottom-input-bar">
+  <view class="action-buttons">
     <button class="action-btn btn-light" bindtap="onCopyLink">复制链接</button>
     <button class="action-btn btn-dark" bindtap="onOpenLink">打开提示</button>
   </view>
+
+  <view class="input-row">
+    <view class="input-wrapper">
+      <input 
+        class="comment-input" 
+        placeholder="Add a comment..." 
+        confirm-type="send"
+        bindconfirm="onSendComment"
+        value="{{newComment}}"
+        bindinput="onInputComment"
+      />
+      <view class="send-btn" bindtap="onSendComment">
+        <text>➤</text>
+      </view>
+    </view>
+    
+    <view class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="onToggleFavorite">
+      <text class="fav-icon">{{isFavorite ? '❤️' : '♡'}}</text>
+    </view>
+  </view>
+</view>
 </view>

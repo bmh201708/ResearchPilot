@@ -15,10 +15,11 @@ page {
   /* 顶部导航 */
   .header-wrapper {
     display: flex;
-    justify-content: space-between;
+    justify-content:flex-start;
     align-items: flex-start; /* 关键：让两侧顶端对齐 */
     margin-bottom: 30px;
     padding-top: 10px;
+    margin-left: -80px;   /* 向左移动 */
   }
   
   .left-column {

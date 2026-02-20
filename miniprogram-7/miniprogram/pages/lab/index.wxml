@@ -15,12 +15,6 @@
       </view>
     </view>
 
-    <view class="right-column">
-      <view class="notification-btn">
-        <view class="dot"></view>
-        <image class="icon-bell" src="/images/lab/bell.png" mode="aspectFit"></image>
-      </view>
-    </view>
   </view>
 
   <view class="card card-large">

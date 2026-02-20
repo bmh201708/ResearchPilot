@@ -85,11 +85,15 @@ page {
   
   /* --- 3. 卡片设计 --- */
   .abstract-card {
-    background: white;
     border-radius: 44rpx;
     padding: 40rpx;
     box-shadow: 0 15rpx 35rpx rgba(0, 0, 0, 0.04);
     margin-bottom: 50rpx;
+    /* 更明显的卡片背景 */
+    background: linear-gradient(145deg, #ffffff, #f7f9ff);
+    /* 增强阴影对比 */
+    box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.08);
+    border: 1rpx solid rgba(0, 0, 0, 0.04);
   }
   
   .quote-icon {
@@ -106,7 +110,7 @@ page {
   }
   
   .card-label {
-    font-size: 28rpx;
+    font-size: 34rpx;
     font-weight: 700;
     margin-bottom: 16rpx;
     color: #111827;
@@ -126,13 +130,16 @@ page {
   }
   
   .insight-card {
-    background: white;
     border-radius: 36rpx;
     padding: 24rpx 30rpx;
     display: flex;
     align-items: center;
     margin-bottom: 16rpx;
-    border: 1rpx solid rgba(0,0,0,0.02);
+    /* 更明显的卡片背景 */
+    background: linear-gradient(145deg, #ffffff, #f7f9ff);
+    /* 增强阴影对比 */
+    box-shadow: 0 20rpx 40rpx rgba(0, 0, 0, 0.08);
+    border: 1rpx solid rgba(0, 0, 0, 0.04);
   }
   
   .insight-icon {
@@ -157,31 +164,21 @@ page {
   }
   
   /* --- 4. 底部悬浮双按钮 --- */
-  .floating-bar {
-    position: fixed;
-    bottom: 50rpx;
-    left: 40rpx;
-    right: 40rpx;
-    height: 120rpx;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border-radius: 60rpx;
+  .action-buttons {
     display: flex;
-    align-items: center;
-    padding: 0 20rpx;
-    box-shadow: 0 20rpx 50rpx rgba(0, 0, 0, 0.1);
     gap: 20rpx;
-    z-index: 100;
   }
   
   .action-btn {
     flex: 1;
-    height: 84rpx;
-    line-height: 84rpx;
-    border-radius: 42rpx;
-    font-size: 24rpx;
-    font-weight: 700;
-    transition: all 0.2s;
+    height: 80rpx;
+    line-height: 80rpx;
+    border-radius: 20rpx;
+    font-size: 26rpx;
+    margin: 0 !important; /* 覆盖小程序默认margin */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .btn-light {
@@ -190,10 +187,172 @@ page {
   }
   
   .btn-dark {
-    background: #111827;
+    background: #1e40af;
     color: white;
   }
   
   .footer-spacer {
     height: 60rpx;
+  }
+
+  /* --- 5. 讨论区 --- */
+
+.discussion-section {
+    margin-top: 30rpx;
+    margin-bottom: 160rpx; /* 给底部输入栏留空间 */
+  }
+  
+  .discussion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+  }
+  
+  .discussion-title {
+    font-size: 30rpx;
+    font-weight: 800;
+    color: #111827;
+  }
+  
+  .view-all {
+    font-size: 22rpx;
+    color: #9ca3af;
+  }
+  
+  .comment-card {
+    display: flex;
+    margin-bottom: 24rpx;
+  }
+  
+  .comment-avatar {
+    width: 70rpx;
+    height: 70rpx;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    font-size: 24rpx;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20rpx;
+  }
+  
+  .comment-body {
+    flex: 1;
+    background: linear-gradient(145deg, #ffffff, #f7f9ff);
+    padding: 24rpx;
+    border-radius: 30rpx;
+    box-shadow: 0 10rpx 25rpx rgba(0,0,0,0.05);
+  }
+  
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12rpx;
+  }
+  
+  .comment-name {
+    font-size: 24rpx;
+    font-weight: 700;
+    margin-right: 20rpx;
+  }
+  
+  .comment-time {
+    font-size: 20rpx;
+    color: #9ca3af;
+  }
+  
+  .comment-text {
+    font-size: 24rpx;
+    color: #374151;
+    line-height: 1.6;
+  }
+
+  /* --- 6. 底部输入栏 --- */
+
+.bottom-input-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20rpx 30rpx 60rpx 30rpx; /* 增加底部安全区距离 */
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1rpx solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 20rpx;
+    z-index: 1000;
+    box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.05);
+  }
+  
+/* 输入+收藏行 */
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+    width: 100%;
+  }
+  
+  .input-wrapper {
+    flex: 1;
+    height: 88rpx;
+    background: #f3f4f6;
+    border-radius: 44rpx;
+    display: flex;
+    align-items: center;
+    padding: 0 10rpx 0 30rpx;
+  }
+  
+  .comment-input {
+    flex: 1;
+    font-size: 26rpx;
+    height: 100%;
+  }
+  
+  .send-btn {
+    width: 70rpx;
+    height: 70rpx;
+    background: #1e40af;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24rpx;
+    transition: transform 0.2s;
+  }
+  
+  .send-btn:active {
+    transform: scale(0.9);
+  }
+  
+  /* 收藏按钮样式 */
+  .favorite-btn {
+    width: 88rpx;
+    height: 88rpx;
+    background: #fff;
+    border-radius: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1rpx solid #eee;
+    flex-shrink: 0; /* 防止被挤压 */
+    box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.03);
+  }
+  
+  .fav-icon {
+    font-size: 40rpx;
+    color: #9ca3af;
+  }
+  
+  .favorite-btn.active .fav-icon {
+    color: #ef4444;
+  }
+  
+  /* 调整页面底部间距，防止内容被遮挡 */
+  .discussion-section {
+    padding-bottom: 280rpx;
   }

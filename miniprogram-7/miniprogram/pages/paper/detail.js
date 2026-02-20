@@ -16,6 +16,51 @@ Page({
     paper: null,
     isLoading: true,
     errorMsg: "",
+
+    comments: [
+        {
+          name: "Jane Doe",
+          time: "2h ago",
+          content: "Interesting approach to sparsity.",
+          initial: "JD"
+        },
+        {
+          name: "Bruce Wayne",
+          time: "3h ago",
+          content: "Not that good.",
+          initial: "BW"
+        }
+      ],
+      newComment: "",
+      isFavorite: false,
+  },
+
+  onInputComment(e) {
+    this.setData({
+      newComment: e.detail.value
+    })
+  },
+  
+  onSendComment() {
+    if (!this.data.newComment.trim()) return;
+  
+    const newItem = {
+      name: "You",
+      time: "Just now",
+      content: this.data.newComment,
+      initial: "YO"
+    }
+  
+    this.setData({
+      comments: [newItem, ...this.data.comments],
+      newComment: ""
+    })
+  },
+  
+  onToggleFavorite() {
+    this.setData({
+      isFavorite: !this.data.isFavorite
+    })
   },
 
   onLoad(options) {
