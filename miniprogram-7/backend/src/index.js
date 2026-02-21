@@ -24,6 +24,13 @@ const pool = new Pool({
 });
 const PAPER_ACTION_TYPES = new Set(["PASS", "MARK", "READ"]);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PROJECT_COLOR_THEMES = new Set([
+  "green",
+  "purple",
+  "yellow",
+  "blue",
+  "orange",
+]);
 const SUPPORTED_MANUSCRIPT_EXTENSIONS = new Set(["pdf", "txt", "md"]);
 const MAX_MANUSCRIPT_BASE64_CHARS = 70 * 1024 * 1024;
 const MAX_REMOTE_MANUSCRIPT_BYTES = 55 * 1024 * 1024;
@@ -31,6 +38,58 @@ const MAX_MANUSCRIPT_CHARS_FOR_REVIEW = 24000;
 const ALLOWED_REMOTE_HOST_SUFFIXES = [".myqcloud.com", ".tcb.qcloud.la"];
 const REVIEW_TASK_TTL_MS = 2 * 60 * 60 * 1000;
 const reviewTasks = new Map();
+const DEFAULT_PROJECT_DEADLINES = [
+  {
+    abbr: "CVPR",
+    fullName: "Computer Vision and Pattern Recognition",
+    location: "Seattle, USA",
+    startDate: "2026-06-17",
+    deadline: "2026-02-22",
+    progress: 90,
+    note: "Abstract registration is closed. Full paper submission only.",
+    colorTheme: "orange",
+  },
+  {
+    abbr: "NeurIPS",
+    fullName: "Neural Information Processing Systems",
+    location: "Vancouver, Canada",
+    startDate: "2026-12-01",
+    deadline: "2026-03-06",
+    progress: 85,
+    note: "",
+    colorTheme: "green",
+  },
+  {
+    abbr: "CHI",
+    fullName: "Human Factors in Computing Systems",
+    location: "Yokohama, JP",
+    startDate: "2026-05-01",
+    deadline: "2026-04-06",
+    progress: 40,
+    note: "",
+    colorTheme: "purple",
+  },
+  {
+    abbr: "ICLR",
+    fullName: "International Conference on Learning Representations",
+    location: "Vienna, Austria",
+    startDate: "2026-05-21",
+    deadline: "2026-05-21",
+    progress: 25,
+    note: "",
+    colorTheme: "yellow",
+  },
+  {
+    abbr: "AAAI",
+    fullName: "Association for the Advancement of AI",
+    location: "Philadelphia, USA",
+    startDate: "2026-07-20",
+    deadline: "2026-07-20",
+    progress: 10,
+    note: "",
+    colorTheme: "blue",
+  },
+];
 
 function parsePositiveInt(value, fallback, max = 100) {
   const parsed = Number.parseInt(String(value ?? ""), 10);
@@ -47,6 +106,179 @@ function normalizeEmail(value) {
   return String(value || "")
     .trim()
     .toLowerCase();
+}
+
+function normalizeProjectDate(value, { required = false } = {}) {
+  if (value === undefined || value === null || value === "") {
+    if (required) {
+      throw createHttpError(400, "invalid_project_date");
+    }
+    return null;
+  }
+  const normalized = String(value).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    throw createHttpError(400, "invalid_project_date");
+  }
+  const parsedDate = new Date(`${normalized}T00:00:00.000Z`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw createHttpError(400, "invalid_project_date");
+  }
+  return normalized;
+}
+
+function normalizeProjectProgress(value, { required = false } = {}) {
+  if (value === undefined || value === null || value === "") {
+    if (required) return 0;
+    return null;
+  }
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    throw createHttpError(400, "invalid_project_progress");
+  }
+  const normalized = Math.round(numeric);
+  if (normalized < 0 || normalized > 100) {
+    throw createHttpError(400, "invalid_project_progress");
+  }
+  return normalized;
+}
+
+function normalizeProjectColorTheme(value, { required = false } = {}) {
+  if (value === undefined || value === null || value === "") {
+    if (required) return "green";
+    return null;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  if (!PROJECT_COLOR_THEMES.has(normalized)) {
+    throw createHttpError(400, "invalid_project_color_theme");
+  }
+  return normalized;
+}
+
+function normalizeProjectText(value, {
+  required = false,
+  maxLength = 128,
+  allowEmpty = false,
+  field = "invalid_project_field",
+} = {}) {
+  if (value === undefined || value === null) {
+    if (!required) return null;
+    throw createHttpError(400, field);
+  }
+  const normalized = String(value).trim();
+  if (!normalized && !allowEmpty) {
+    throw createHttpError(400, field);
+  }
+  if (normalized.length > maxLength) {
+    throw createHttpError(400, field);
+  }
+  return normalized;
+}
+
+function hasOwn(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj || {}, key);
+}
+
+function parseProjectDeadlinePayload(body, { partial = false } = {}) {
+  const raw = body || {};
+  const payload = {};
+
+  if (!partial || hasOwn(raw, "abbr")) {
+    payload.abbr = normalizeProjectText(raw.abbr, {
+      required: !partial,
+      maxLength: 24,
+      allowEmpty: false,
+      field: "invalid_project_abbr",
+    });
+  }
+
+  if (!partial || hasOwn(raw, "fullName")) {
+    payload.fullName = normalizeProjectText(raw.fullName, {
+      required: !partial,
+      maxLength: 256,
+      allowEmpty: false,
+      field: "invalid_project_full_name",
+    });
+  }
+
+  if (!partial || hasOwn(raw, "location")) {
+    payload.location = normalizeProjectText(raw.location, {
+      required: false,
+      maxLength: 128,
+      allowEmpty: true,
+      field: "invalid_project_location",
+    });
+    if (payload.location === null) payload.location = "";
+  }
+
+  if (!partial || hasOwn(raw, "startDate")) {
+    payload.startDate = normalizeProjectDate(raw.startDate, { required: false });
+  }
+
+  if (!partial || hasOwn(raw, "deadline")) {
+    payload.deadline = normalizeProjectDate(raw.deadline, { required: true });
+  }
+
+  if (!partial || hasOwn(raw, "progress")) {
+    payload.progress = normalizeProjectProgress(raw.progress, {
+      required: !partial,
+    });
+    if (payload.progress === null) payload.progress = 0;
+  }
+
+  if (!partial || hasOwn(raw, "note")) {
+    payload.note = normalizeProjectText(raw.note, {
+      required: false,
+      maxLength: 1000,
+      allowEmpty: true,
+      field: "invalid_project_note",
+    });
+    if (payload.note === null) payload.note = "";
+  }
+
+  if (!partial || hasOwn(raw, "colorTheme")) {
+    payload.colorTheme = normalizeProjectColorTheme(raw.colorTheme, {
+      required: !partial,
+    });
+    if (!payload.colorTheme) payload.colorTheme = "green";
+  }
+
+  return payload;
+}
+
+function mapProjectDeadlineRow(row) {
+  const formatDateOnly = (value) => {
+    if (!value) return "";
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value.toISOString().slice(0, 10);
+    }
+    const raw = String(value).trim();
+    if (!raw) return "";
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+      return raw.slice(0, 10);
+    }
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return "";
+    return parsed.toISOString().slice(0, 10);
+  };
+
+  const startDate = formatDateOnly(row?.start_date);
+  const deadline = formatDateOnly(row?.deadline);
+  const year = startDate ? startDate.slice(0, 4) : deadline ? deadline.slice(0, 4) : "";
+
+  return {
+    id: row.id,
+    abbr: row.abbr || "",
+    year,
+    fullName: row.full_name || "",
+    location: row.location || "",
+    startDate,
+    deadline,
+    progress: Number.isFinite(row.progress) ? row.progress : Number(row.progress || 0),
+    note: row.note || "",
+    colorTheme: row.color_theme || "green",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }
 
 function hashPassword(password) {
@@ -851,6 +1083,104 @@ async function upsertUserByOpenId({ openid, nickname, avatarUrl }) {
   return result.rows[0];
 }
 
+async function seedDefaultProjectDeadlines(userId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const userResult = await client.query(
+      `
+        SELECT project_defaults_initialized
+        FROM users
+        WHERE id = $1
+        FOR UPDATE;
+      `,
+      [userId]
+    );
+    const userRow = userResult.rows[0];
+    if (!userRow) {
+      await client.query("ROLLBACK");
+      return;
+    }
+    if (userRow.project_defaults_initialized) {
+      await client.query("COMMIT");
+      return;
+    }
+
+    const countResult = await client.query(
+      `
+        SELECT COUNT(*)::int AS total
+        FROM project_deadlines
+        WHERE user_id = $1;
+      `,
+      [userId]
+    );
+    const existingTotal = countResult.rows[0]?.total ?? 0;
+    if (existingTotal > 0) {
+      await client.query(
+        `
+          UPDATE users
+          SET project_defaults_initialized = TRUE,
+              updated_at = NOW()
+          WHERE id = $1;
+        `,
+        [userId]
+      );
+      await client.query("COMMIT");
+      return;
+    }
+
+    const sql = `
+      INSERT INTO project_deadlines (
+        id,
+        user_id,
+        abbr,
+        full_name,
+        location,
+        start_date,
+        deadline,
+        progress,
+        note,
+        color_theme
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ON CONFLICT (user_id, abbr, deadline) DO NOTHING;
+    `;
+
+    for (const conf of DEFAULT_PROJECT_DEADLINES) {
+      await client.query(sql, [
+        crypto.randomUUID(),
+        userId,
+        conf.abbr,
+        conf.fullName,
+        conf.location || "",
+        conf.startDate || null,
+        conf.deadline,
+        Number(conf.progress) || 0,
+        conf.note || "",
+        conf.colorTheme || "green",
+      ]);
+    }
+
+    await client.query(
+      `
+        UPDATE users
+        SET project_defaults_initialized = TRUE,
+            updated_at = NOW()
+        WHERE id = $1;
+      `,
+      [userId]
+    );
+
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 app.get("/healthz", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -1075,6 +1405,214 @@ app.get("/users/me", authMiddleware, async (req, res) => {
     createdAt: user.created_at,
     updatedAt: user.updated_at,
   });
+});
+
+app.get("/projects/conferences", authMiddleware, async (req, res) => {
+  try {
+    await seedDefaultProjectDeadlines(req.auth.userId);
+
+    const result = await pool.query(
+      `
+        SELECT
+          id,
+          user_id,
+          abbr,
+          full_name,
+          location,
+          start_date,
+          deadline,
+          progress,
+          note,
+          color_theme,
+          created_at,
+          updated_at
+        FROM project_deadlines
+        WHERE user_id = $1
+        ORDER BY deadline ASC, created_at ASC;
+      `,
+      [req.auth.userId]
+    );
+
+    return res.status(200).json({
+      items: result.rows.map(mapProjectDeadlineRow),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "project_conference_list_failed",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
+app.post("/projects/conferences", authMiddleware, async (req, res) => {
+  try {
+    const payload = parseProjectDeadlinePayload(req.body, { partial: false });
+    const result = await pool.query(
+      `
+        INSERT INTO project_deadlines (
+          id,
+          user_id,
+          abbr,
+          full_name,
+          location,
+          start_date,
+          deadline,
+          progress,
+          note,
+          color_theme
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING
+          id,
+          user_id,
+          abbr,
+          full_name,
+          location,
+          start_date,
+          deadline,
+          progress,
+          note,
+          color_theme,
+          created_at,
+          updated_at;
+      `,
+      [
+        crypto.randomUUID(),
+        req.auth.userId,
+        payload.abbr,
+        payload.fullName,
+        payload.location || "",
+        payload.startDate,
+        payload.deadline,
+        payload.progress ?? 0,
+        payload.note || "",
+        payload.colorTheme || "green",
+      ]
+    );
+
+    return res.status(201).json({
+      item: mapProjectDeadlineRow(result.rows[0]),
+    });
+  } catch (err) {
+    const status = err?.status || 500;
+    return res.status(status).json({
+      message: err?.publicMessage || "project_conference_create_failed",
+      detail: err?.detail || String(err?.message || err),
+    });
+  }
+});
+
+app.patch("/projects/conferences/:id", authMiddleware, async (req, res) => {
+  try {
+    const projectId = String(req.params?.id || "").trim();
+    if (!projectId) {
+      return res.status(400).json({ message: "invalid_project_id" });
+    }
+
+    const payload = parseProjectDeadlinePayload(req.body, { partial: true });
+    const columnMap = {
+      abbr: "abbr",
+      fullName: "full_name",
+      location: "location",
+      startDate: "start_date",
+      deadline: "deadline",
+      progress: "progress",
+      note: "note",
+      colorTheme: "color_theme",
+    };
+
+    const updates = [];
+    const values = [];
+    let index = 1;
+
+    for (const [key, column] of Object.entries(columnMap)) {
+      if (!hasOwn(payload, key)) continue;
+      updates.push(`${column} = $${index}`);
+      values.push(payload[key]);
+      index += 1;
+    }
+
+    if (!updates.length) {
+      return res.status(400).json({ message: "no_project_fields_to_update" });
+    }
+
+    updates.push("updated_at = NOW()");
+
+    values.push(projectId);
+    values.push(req.auth.userId);
+    const idParam = index;
+    const userIdParam = index + 1;
+
+    const result = await pool.query(
+      `
+        UPDATE project_deadlines
+        SET ${updates.join(", ")}
+        WHERE id = $${idParam}
+          AND user_id = $${userIdParam}
+        RETURNING
+          id,
+          user_id,
+          abbr,
+          full_name,
+          location,
+          start_date,
+          deadline,
+          progress,
+          note,
+          color_theme,
+          created_at,
+          updated_at;
+      `,
+      values
+    );
+
+    const updated = result.rows[0];
+    if (!updated) {
+      return res.status(404).json({ message: "project_conference_not_found" });
+    }
+
+    return res.status(200).json({
+      item: mapProjectDeadlineRow(updated),
+    });
+  } catch (err) {
+    const status = err?.status || 500;
+    return res.status(status).json({
+      message: err?.publicMessage || "project_conference_update_failed",
+      detail: err?.detail || String(err?.message || err),
+    });
+  }
+});
+
+app.delete("/projects/conferences/:id", authMiddleware, async (req, res) => {
+  try {
+    const projectId = String(req.params?.id || "").trim();
+    if (!projectId) {
+      return res.status(400).json({ message: "invalid_project_id" });
+    }
+
+    const result = await pool.query(
+      `
+        DELETE FROM project_deadlines
+        WHERE id = $1
+          AND user_id = $2
+        RETURNING id;
+      `,
+      [projectId, req.auth.userId]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ message: "project_conference_not_found" });
+    }
+
+    return res.status(200).json({
+      id: result.rows[0].id,
+      deleted: true,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "project_conference_delete_failed",
+      detail: String(err?.message || err),
+    });
+  }
 });
 
 app.get("/papers/feed", authMiddleware, async (req, res) => {

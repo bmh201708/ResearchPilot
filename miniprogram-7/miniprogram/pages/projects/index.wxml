@@ -41,7 +41,7 @@
     </view>
 
     <view class="progress-track">
-      <view class="progress-bar" style="width: {{featuredConf.progress}}"></view>
+      <view class="progress-bar" style="width: {{featuredConf.progress}}%;"></view>
     </view>
 
     <view class="note-box" wx:if="{{featuredConf.note}}">
@@ -69,7 +69,7 @@
           <text>{{item.progress}}%</text>
         </view>
         <view class="progress-track small-track">
-          <view class="progress-bar-small {{item.colorTheme}}-bg" style="width: {{item.progress}}"></view>
+          <view class="progress-bar-small {{item.colorTheme}}-bg" style="width: {{item.progress}}%;"></view>
         </view>
       </view>
     </view>

@@ -45,6 +45,7 @@ model User {
   passwordHash String?          @map("password_hash")
   authProvider String           @default("WECHAT") @map("auth_provider")
   fieldOfStudy String?          @map("field_of_study")
+  projectDefaultsInitialized Boolean @default(false) @map("project_defaults_initialized")
   nickname    String?
   avatarUrl   String?           @map("avatar_url")
   createdAt   DateTime          @default(now()) @map("created_at")
@@ -55,6 +56,7 @@ model User {
   missions    Mission[]
   aiJobs      AiJob[]
   badges      UserBadge[]
+  projectDeadlines ProjectDeadline[]
 
   @@map("users")
 }
@@ -203,4 +205,24 @@ model UserBadge {
 
   @@unique([userId, badgeCode], map: "uq_user_badges_user_badge")
   @@map("user_badges")
+}
+
+model ProjectDeadline {
+  id        String   @id
+  userId    String   @map("user_id")
+  abbr      String
+  fullName  String   @map("full_name")
+  location  String   @default("")
+  startDate DateTime? @db.Date @map("start_date")
+  deadline  DateTime  @db.Date
+  progress  Int      @default(0)
+  note      String   @default("")
+  colorTheme String  @default("green") @map("color_theme")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, abbr, deadline], map: "uq_project_deadlines_user_abbr_deadline")
+  @@index([userId, deadline], map: "idx_project_deadlines_user_deadline")
+  @@map("project_deadlines")
 }

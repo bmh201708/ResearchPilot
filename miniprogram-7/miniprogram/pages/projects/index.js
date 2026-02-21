@@ -1,270 +1,299 @@
-// pages/projects/index.js
-Page({
+const { request } = require("../../utils/request");
 
-  /**
-   * 页面的初始数据
-   */
+function getDiffDays(deadline) {
+  const ddlTime = new Date(deadline).getTime();
+  const todayTime = new Date().getTime();
+  return Math.ceil((ddlTime - todayTime) / (1000 * 60 * 60 * 24));
+}
+
+function normalizeConference(item) {
+  const startDate = item && item.startDate ? String(item.startDate) : "";
+  const deadline = item && item.deadline ? String(item.deadline) : "";
+  return {
+    id: item.id,
+    abbr: String(item.abbr || "").trim(),
+    year:
+      String(item.year || "").trim() ||
+      (startDate ? startDate.slice(0, 4) : deadline ? deadline.slice(0, 4) : ""),
+    fullName: String(item.fullName || "").trim(),
+    location: String(item.location || "").trim(),
+    startDate,
+    deadline,
+    progress: Number(item.progress || 0),
+    note: String(item.note || "").trim(),
+    colorTheme: String(item.colorTheme || "green").trim().toLowerCase() || "green",
+  };
+}
+
+Page({
   data: {
     featuredConf: null,
     gridConfs: [],
     allConfs: [],
-
     showModal: false,
     isEdit: false,
     currentEditId: null,
-
+    isLoading: false,
+    isSaving: false,
     formData: {
-    abbr: '',
-    fullName: '',
-    location: '',
-    deadline: '',
-    progress: 0,
-    note: '',
-    colorTheme: 'green'
+      abbr: "",
+      fullName: "",
+      location: "",
+      startDate: "",
+      deadline: "",
+      progress: 0,
+      note: "",
+      colorTheme: "green",
     },
-    //颜色列表
     themeOptions: [
-        { name: 'Green', value: 'green' },
-        { name: 'Purple', value: 'purple' },
-        { name: 'Yellow', value: 'yellow' },
-        { name: 'Blue', value: 'blue' },
-        { name: 'Orange', value: 'orange' }
-      ]
-
+      { name: "Green", value: "green" },
+      { name: "Purple", value: "purple" },
+      { name: "Yellow", value: "yellow" },
+      { name: "Blue", value: "blue" },
+      { name: "Orange", value: "orange" },
+    ],
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad: function () {
-    // 模拟储存在本地或后端的会议DDL数据
-    // 注意：这里的deadline请根据实际情况填写标准的日期格式
-    const conferences = [
-      { 
-        id: 1, 
-        abbr: 'CVPR', 
-        year: '', 
-        location: 'Seattle, USA', 
-        fullName: 'Computer Vision and Pattern Recognition', 
-        deadline: '2026-02-22', // 假设2天后
-        progress: 90, 
-        note: 'Abstract registration is closed. Full paper submission only.', 
-        colorTheme: 'orange' 
-      },
-      { 
-        id: 2, 
-        abbr: 'NeurIPS', 
-        year: '', 
-        location: 'Vancouver, Canada', 
-        fullName: 'Neural Information Processing Systems', 
-        deadline: '2026-03-06', // 14天后
-        progress: 85, 
-        colorTheme: 'green' 
-      },
-      { 
-        id: 3, 
-        abbr: 'CHI', 
-        year: '', 
-        location: 'Yokohama, JP', 
-        fullName: 'Human Factors in Computing Systems', 
-        deadline: '2026-04-06', // 45天后
-        progress: 40, 
-        colorTheme: 'purple' 
-      },
-      { 
-        id: 4, 
-        abbr: 'ICLR', 
-        year: '', 
-        location: 'Vienna, Austria', 
-        fullName: 'International Conference on Learning Representations', 
-        deadline: '2026-05-21', // 3个月后
-        progress: 25, 
-        colorTheme: 'yellow' 
-      },
-      { 
-        id: 5, 
-        abbr: 'AAAI', 
-        year: '', 
-        location: 'Philadelphia, USA', 
-        fullName: 'Association for the Advancement of AI', 
-        deadline: '2026-07-20', // 5个月后
-        progress: 10, 
-        colorTheme: 'blue' 
-      }
-    ];
-
-    this.setData({
-        allConfs: conferences
-      });
-      this.processConferences(conferences);
+  onLoad() {
+    this.fetchConferences();
   },
 
-  processConferences: function(conferences) {
-    const today = new Date().getTime();
+  onPullDownRefresh() {
+    this.fetchConferences({ stopPullDown: true });
+  },
 
-    // 1. 计算剩余时间并格式化
-    let processedList = conferences.map(conf => {
-      const ddlTime = new Date(conf.deadline).getTime();
-      const diffTime = ddlTime - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      let timeLeftStr = '';
-      if (diffDays <= 0) {
-        timeLeftStr = 'Passed';
-      } else if (diffDays <= 60) {
-        timeLeftStr = diffDays + ' Days';
-      } else {
-        timeLeftStr = Math.round(diffDays / 30) + ' Mos';
-      }
-
-      return {
-        ...conf,
-        diffDays: diffDays,
-        timeLeftStr: timeLeftStr
-      };
-    });
-
-    // 2. 过滤掉已经过期的，并按照距离DDL的远近从小到大排序
-    processedList = processedList.filter(c => c.diffDays > 0);
-    processedList.sort((a, b) => a.diffDays - b.diffDays);
-
-    // 3. 将最近的一个作为 featuredConf，剩下的作为 gridConfs
-    if (processedList.length > 0) {
-      this.setData({
-        featuredConf: processedList[0],
-        gridConfs: processedList.slice(1)
+  handleAuthError(err) {
+    if (err.statusCode === 401 || err.message === "missing_token") {
+      wx.removeStorageSync("token");
+      wx.removeStorageSync("user");
+      wx.reLaunch({
+        url: "/pages/login/login",
       });
+      return true;
     }
+    return false;
+  },
+
+  async fetchConferences(options = {}) {
+    this.setData({ isLoading: true });
+    try {
+      const resp = await request({
+        url: "/projects/conferences",
+        method: "GET",
+        auth: true,
+      });
+      const conferences = Array.isArray(resp.items)
+        ? resp.items.map(normalizeConference)
+        : [];
+      this.processConferences(conferences);
+    } catch (err) {
+      if (!this.handleAuthError(err)) {
+        wx.showToast({
+          title: "加载失败",
+          icon: "none",
+        });
+      }
+    } finally {
+      this.setData({ isLoading: false });
+      if (options.stopPullDown) {
+        wx.stopPullDownRefresh();
+      }
+    }
+  },
+
+  processConferences(conferences) {
+    const list = Array.isArray(conferences) ? conferences : [];
+    const processedList = list
+      .map((conf) => {
+        const diffDays = getDiffDays(conf.deadline);
+        let timeLeftStr = "";
+        if (diffDays <= 0) {
+          timeLeftStr = "Passed";
+        } else if (diffDays <= 60) {
+          timeLeftStr = `${diffDays} Days`;
+        } else {
+          timeLeftStr = `${Math.round(diffDays / 30)} Mos`;
+        }
+        return {
+          ...conf,
+          diffDays,
+          timeLeftStr,
+        };
+      })
+      .filter((conf) => conf.diffDays > 0)
+      .sort((a, b) => a.diffDays - b.diffDays);
 
     this.setData({
-        allConfs: conferences,
-        featuredConf: processedList[0],
-        gridConfs: processedList.slice(1)
-      }); 
+      allConfs: list,
+      featuredConf: processedList[0] || null,
+      gridConfs: processedList.slice(1),
+    });
   },
 
   onEditConference(e) {
     const conf = e.currentTarget.dataset.item;
-  
+    if (!conf || !conf.id) return;
+
     this.setData({
       showModal: true,
       isEdit: true,
       currentEditId: conf.id,
-      formData: { ...conf }
+      formData: {
+        abbr: conf.abbr || "",
+        fullName: conf.fullName || "",
+        location: conf.location || "",
+        startDate: conf.startDate || "",
+        deadline: conf.deadline || "",
+        progress: String(conf.progress ?? 0),
+        note: conf.note || "",
+        colorTheme: conf.colorTheme || "green",
+      },
     });
   },
+
   onAddConference() {
     this.setData({
       showModal: true,
       isEdit: false,
       currentEditId: null,
       formData: {
-        abbr: '',
-        fullName: '',
-        location: '',
-        deadline: '2026-03-01',
-        progress: '50',
-        note: 'no notes here',
-        colorTheme: 'green'
-      }
+        abbr: "",
+        fullName: "",
+        location: "",
+        startDate: "",
+        deadline: "",
+        progress: "0",
+        note: "",
+        colorTheme: "green",
+      },
     });
   },
+
   onInputChange(e) {
     const field = e.currentTarget.dataset.field;
     this.setData({
-      [`formData.${field}`]: e.detail.value
+      [`formData.${field}`]: e.detail.value,
     });
-  },
-  closeModal() {
-    this.setData({ showModal: false });
-  },
-  onSaveConference() {
-    let { allConfs, formData, isEdit, currentEditId } = this.data;
-  
-    if (isEdit) {
-      allConfs = allConfs.map(conf =>
-        conf.id === currentEditId ? { ...formData, id: currentEditId } : conf
-      );
-    } else {
-      const newId = Date.now();
-      allConfs.push({
-        ...formData,
-        id: newId
-      });
-    }
-  
-    this.setData({
-      showModal: false
-    });
-  
-    this.processConferences(allConfs);
   },
 
-  onDeleteConference() {
-    const { currentEditId, allConfs } = this.data;
-  
-    const newList = allConfs.filter(conf => conf.id !== currentEditId);
-  
-    this.setData({
-      showModal: false
-    });
-  
-    this.processConferences(newList);
-  },
-
-  // 添加颜色选择处理函数
   onSelectColor(e) {
     const theme = e.currentTarget.dataset.theme;
     this.setData({
-      'formData.colorTheme': theme
+      "formData.colorTheme": theme,
     });
   },
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
 
+  closeModal() {
+    this.setData({ showModal: false });
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
+  buildPayload(formData) {
+    const abbr = String(formData.abbr || "").trim();
+    const fullName = String(formData.fullName || "").trim();
+    const location = String(formData.location || "").trim();
+    const startDate = String(formData.startDate || "").trim();
+    const deadline = String(formData.deadline || "").trim();
+    const note = String(formData.note || "").trim();
+    const progress = Number(formData.progress);
+    const colorTheme = String(formData.colorTheme || "green")
+      .trim()
+      .toLowerCase();
 
+    if (!abbr) {
+      wx.showToast({ title: "请输入简称", icon: "none" });
+      return null;
+    }
+    if (!fullName) {
+      wx.showToast({ title: "请输入会议全称", icon: "none" });
+      return null;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(deadline)) {
+      wx.showToast({ title: "截止日期格式应为 YYYY-MM-DD", icon: "none" });
+      return null;
+    }
+    if (startDate && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+      wx.showToast({ title: "开始日期格式应为 YYYY-MM-DD", icon: "none" });
+      return null;
+    }
+    if (!Number.isFinite(progress) || progress < 0 || progress > 100) {
+      wx.showToast({ title: "进度需为 0-100", icon: "none" });
+      return null;
+    }
+
+    return {
+      abbr,
+      fullName,
+      location,
+      startDate: startDate || null,
+      deadline,
+      progress: Math.round(progress),
+      note,
+      colorTheme,
+    };
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
+  async onSaveConference() {
+    if (this.data.isSaving) return;
+    const payload = this.buildPayload(this.data.formData);
+    if (!payload) return;
 
+    this.setData({ isSaving: true });
+    try {
+      if (this.data.isEdit) {
+        await request({
+          url: `/projects/conferences/${encodeURIComponent(this.data.currentEditId)}`,
+          method: "PATCH",
+          data: payload,
+          auth: true,
+        });
+      } else {
+        await request({
+          url: "/projects/conferences",
+          method: "POST",
+          data: payload,
+          auth: true,
+        });
+      }
+
+      this.setData({
+        showModal: false,
+      });
+      await this.fetchConferences();
+    } catch (err) {
+      if (!this.handleAuthError(err)) {
+        wx.showToast({
+          title: "保存失败",
+          icon: "none",
+        });
+      }
+    } finally {
+      this.setData({ isSaving: false });
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
+  async onDeleteConference() {
+    if (!this.data.currentEditId || this.data.isSaving) return;
 
+    this.setData({ isSaving: true });
+    try {
+      await request({
+        url: `/projects/conferences/${encodeURIComponent(this.data.currentEditId)}`,
+        method: "DELETE",
+        auth: true,
+      });
+      this.setData({
+        showModal: false,
+      });
+      await this.fetchConferences();
+    } catch (err) {
+      if (!this.handleAuthError(err)) {
+        wx.showToast({
+          title: "删除失败",
+          icon: "none",
+        });
+      }
+    } finally {
+      this.setData({ isSaving: false });
+    }
   },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
-  }
-})
+});

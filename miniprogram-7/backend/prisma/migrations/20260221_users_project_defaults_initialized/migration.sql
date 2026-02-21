@@ -1,0 +1,2 @@
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS project_defaults_initialized BOOLEAN NOT NULL DEFAULT FALSE;
