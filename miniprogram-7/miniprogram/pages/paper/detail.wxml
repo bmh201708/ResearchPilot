@@ -51,26 +51,57 @@
 <view class="discussion-section">
   <view class="discussion-header">
     <text class="discussion-title">Comments ({{comments.length}})</text>
-    <text class="view-all">View All</text>
+    <view class="comment-sort-group">
+      <view
+        class="sort-chip {{commentSortBy === 'time' ? 'active' : ''}}"
+        data-sort="time"
+        bindtap="onChangeCommentSort"
+      >
+        Latest
+      </view>
+      <view
+        class="sort-chip {{commentSortBy === 'likes' ? 'active' : ''}}"
+        data-sort="likes"
+        bindtap="onChangeCommentSort"
+      >
+        Top
+      </view>
+    </view>
   </view>
 
-  <view 
-    wx:for="{{comments}}" 
-    wx:key="index" 
-    class="comment-card"
-  >
-    <view class="comment-avatar">
-      {{item.initial}}
-    </view>
+  <view wx:if="{{commentsLoading}}" class="comment-state">Loading comments...</view>
+  <view wx:elif="{{commentsError}}" class="comment-state comment-state-error">{{commentsError}}</view>
+  <view wx:elif="{{!comments.length}}" class="comment-state">No comments yet. Be the first one.</view>
 
-    <view class="comment-body">
-      <view class="comment-meta">
-        <text class="comment-name">{{item.name}}</text>
-        <text class="comment-time">{{item.time}}</text>
+  <view wx:else>
+    <view 
+      wx:for="{{comments}}" 
+      wx:key="id" 
+      class="comment-card"
+    >
+      <view class="comment-avatar">
+        {{item.initial}}
       </view>
 
-      <view class="comment-text">
-        {{item.content}}
+      <view class="comment-body">
+        <view class="comment-meta">
+          <text class="comment-name">{{item.name}}</text>
+          <text class="comment-time">{{item.timeText}}</text>
+        </view>
+
+        <view class="comment-text">
+          {{item.content}}
+        </view>
+
+        <view class="comment-actions">
+          <view
+            class="comment-like-btn {{item.likedByMe ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="onToggleCommentLike"
+          >
+            👍 {{item.likeCount}}
+          </view>
+        </view>
       </view>
     </view>
   </view>

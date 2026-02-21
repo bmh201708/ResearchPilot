@@ -102,6 +102,18 @@ function normalizeKeywords(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function normalizeCommentSortBy(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw === "likes" || raw === "like") return "likes";
+  return "time";
+}
+
+function normalizeSortOrder(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw === "asc") return "ASC";
+  return "DESC";
+}
+
 function normalizeEmail(value) {
   return String(value || "")
     .trim()
@@ -1962,6 +1974,299 @@ app.get("/papers/:id", authMiddleware, async (req, res) => {
       message: "paper_detail_failed",
       detail: String(err?.message || err),
     });
+  }
+});
+
+app.get("/papers/:id/comments", authMiddleware, async (req, res) => {
+  try {
+    const paperId = String(req.params.id || "").trim();
+    if (!paperId) {
+      return res.status(400).json({ message: "invalid_paper_id" });
+    }
+
+    const sortBy = normalizeCommentSortBy(req.query.sortBy);
+    const order = normalizeSortOrder(req.query.order);
+    const page = parsePositiveInt(req.query.page, 1, 1000000);
+    const pageSize = parsePositiveInt(req.query.pageSize, 20, 100);
+    const offset = (page - 1) * pageSize;
+
+    const paperResult = await pool.query(
+      `
+        SELECT id
+        FROM papers
+        WHERE id = $1
+        LIMIT 1;
+      `,
+      [paperId]
+    );
+    if (!paperResult.rows[0]) {
+      return res.status(404).json({ message: "paper_not_found" });
+    }
+
+    const orderBySql =
+      sortBy === "likes"
+        ? `c.like_count ${order}, c.created_at DESC`
+        : `c.created_at ${order}, c.like_count DESC`;
+
+    const [countResult, listResult] = await Promise.all([
+      pool.query(
+        `
+          SELECT COUNT(*)::int AS total
+          FROM comments
+          WHERE paper_id = $1
+            AND status = 'VISIBLE';
+        `,
+        [paperId]
+      ),
+      pool.query(
+        `
+          SELECT
+            c.id,
+            c.paper_id,
+            c.user_id,
+            c.content,
+            c.like_count,
+            c.created_at,
+            c.updated_at,
+            u.nickname,
+            u.avatar_url,
+            EXISTS (
+              SELECT 1
+              FROM comment_likes cl
+              WHERE cl.comment_id = c.id
+                AND cl.user_id = $2
+            ) AS liked_by_me
+          FROM comments c
+          INNER JOIN users u ON u.id = c.user_id
+          WHERE c.paper_id = $1
+            AND c.status = 'VISIBLE'
+          ORDER BY ${orderBySql}
+          LIMIT $3 OFFSET $4;
+        `,
+        [paperId, req.auth.userId, pageSize, offset]
+      ),
+    ]);
+
+    const total = countResult.rows[0]?.total ?? 0;
+    const items = listResult.rows.map((row) => ({
+      id: row.id,
+      paperId: row.paper_id,
+      userId: row.user_id,
+      user: {
+        nickname: row.nickname || null,
+        avatarUrl: row.avatar_url || null,
+      },
+      content: row.content,
+      likeCount: Number.isFinite(row.like_count)
+        ? row.like_count
+        : Number(row.like_count || 0),
+      likedByMe: Boolean(row.liked_by_me),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+
+    return res.status(200).json({
+      items,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        hasMore: offset + items.length < total,
+      },
+      sort: {
+        by: sortBy,
+        order: order.toLowerCase(),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "paper_comments_list_failed",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
+app.post("/papers/:id/comments", authMiddleware, async (req, res) => {
+  try {
+    const paperId = String(req.params.id || "").trim();
+    if (!paperId) {
+      return res.status(400).json({ message: "invalid_paper_id" });
+    }
+
+    const content = String(req.body?.content || "").trim();
+    if (!content) {
+      return res.status(400).json({ message: "invalid_comment_content" });
+    }
+    if (content.length > 2000) {
+      return res.status(400).json({ message: "comment_too_long" });
+    }
+
+    const paperResult = await pool.query(
+      `
+        SELECT id
+        FROM papers
+        WHERE id = $1
+        LIMIT 1;
+      `,
+      [paperId]
+    );
+    if (!paperResult.rows[0]) {
+      return res.status(404).json({ message: "paper_not_found" });
+    }
+
+    const result = await pool.query(
+      `
+        INSERT INTO comments (
+          id,
+          paper_id,
+          user_id,
+          content,
+          status
+        )
+        VALUES ($1, $2, $3, $4, 'VISIBLE')
+        RETURNING
+          id,
+          paper_id,
+          user_id,
+          content,
+          like_count,
+          created_at,
+          updated_at;
+      `,
+      [crypto.randomUUID(), paperId, req.auth.userId, content]
+    );
+    const row = result.rows[0];
+
+    return res.status(201).json({
+      item: {
+        id: row.id,
+        paperId: row.paper_id,
+        userId: row.user_id,
+        user: {
+          nickname: req.currentUser?.nickname || null,
+          avatarUrl: req.currentUser?.avatar_url || null,
+        },
+        content: row.content,
+        likeCount: Number.isFinite(row.like_count)
+          ? row.like_count
+          : Number(row.like_count || 0),
+        likedByMe: false,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "paper_comment_create_failed",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
+app.post("/papers/:id/comments/:commentId/like", authMiddleware, async (req, res) => {
+  const paperId = String(req.params.id || "").trim();
+  const commentId = String(req.params.commentId || "").trim();
+  if (!paperId) {
+    return res.status(400).json({ message: "invalid_paper_id" });
+  }
+  if (!commentId) {
+    return res.status(400).json({ message: "invalid_comment_id" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const commentResult = await client.query(
+      `
+        SELECT id
+        FROM comments
+        WHERE id = $1
+          AND paper_id = $2
+          AND status = 'VISIBLE'
+        LIMIT 1
+        FOR UPDATE;
+      `,
+      [commentId, paperId]
+    );
+    if (!commentResult.rows[0]) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "comment_not_found" });
+    }
+
+    const insertLike = await client.query(
+      `
+        INSERT INTO comment_likes (id, comment_id, user_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (comment_id, user_id) DO NOTHING
+        RETURNING id;
+      `,
+      [crypto.randomUUID(), commentId, req.auth.userId]
+    );
+
+    let liked = false;
+    if (insertLike.rows[0]) {
+      liked = true;
+      await client.query(
+        `
+          UPDATE comments
+          SET like_count = like_count + 1,
+              updated_at = NOW()
+          WHERE id = $1;
+        `,
+        [commentId]
+      );
+    } else {
+      const deleteLike = await client.query(
+        `
+          DELETE FROM comment_likes
+          WHERE comment_id = $1
+            AND user_id = $2
+          RETURNING id;
+        `,
+        [commentId, req.auth.userId]
+      );
+      if (deleteLike.rows[0]) {
+        liked = false;
+        await client.query(
+          `
+            UPDATE comments
+            SET like_count = GREATEST(like_count - 1, 0),
+                updated_at = NOW()
+            WHERE id = $1;
+          `,
+          [commentId]
+        );
+      }
+    }
+
+    const likeCountResult = await client.query(
+      `
+        SELECT like_count
+        FROM comments
+        WHERE id = $1
+        LIMIT 1;
+      `,
+      [commentId]
+    );
+    const likeCount = Number.isFinite(likeCountResult.rows[0]?.like_count)
+      ? likeCountResult.rows[0].like_count
+      : Number(likeCountResult.rows[0]?.like_count || 0);
+
+    await client.query("COMMIT");
+    return res.status(200).json({
+      commentId,
+      liked,
+      likeCount,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    return res.status(500).json({
+      message: "paper_comment_like_failed",
+      detail: String(err?.message || err),
+    });
+  } finally {
+    client.release();
   }
 });
 

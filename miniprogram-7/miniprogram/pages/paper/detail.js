@@ -10,6 +10,41 @@ function formatDate(value) {
   return `${year}-${month}-${day}`;
 }
 
+function formatRelativeTime(value) {
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs < 60 * 1000) return "Just now";
+  if (diffMs < 60 * 60 * 1000) return `${Math.floor(diffMs / (60 * 1000))}m ago`;
+  if (diffMs < 24 * 60 * 60 * 1000) return `${Math.floor(diffMs / (60 * 60 * 1000))}h ago`;
+  if (diffMs < 7 * 24 * 60 * 60 * 1000) return `${Math.floor(diffMs / (24 * 60 * 60 * 1000))}d ago`;
+  return formatDate(value);
+}
+
+function buildInitial(name) {
+  const normalized = String(name || "").trim();
+  if (!normalized) return "US";
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return normalized.slice(0, 2).toUpperCase();
+}
+
+function normalizeComment(item) {
+  const nickname = String(item?.user?.nickname || "").trim() || "User";
+  return {
+    id: item.id,
+    name: nickname,
+    timeText: formatRelativeTime(item.createdAt),
+    content: item.content || "",
+    initial: buildInitial(nickname),
+    likeCount: Number(item.likeCount || 0),
+    likedByMe: Boolean(item.likedByMe),
+  };
+}
+
 Page({
   data: {
     paperId: "",
@@ -17,50 +52,13 @@ Page({
     isLoading: true,
     errorMsg: "",
 
-    comments: [
-        {
-          name: "Jane Doe",
-          time: "2h ago",
-          content: "Interesting approach to sparsity.",
-          initial: "JD"
-        },
-        {
-          name: "Bruce Wayne",
-          time: "3h ago",
-          content: "Not that good.",
-          initial: "BW"
-        }
-      ],
-      newComment: "",
-      isFavorite: false,
-  },
-
-  onInputComment(e) {
-    this.setData({
-      newComment: e.detail.value
-    })
-  },
-  
-  onSendComment() {
-    if (!this.data.newComment.trim()) return;
-  
-    const newItem = {
-      name: "You",
-      time: "Just now",
-      content: this.data.newComment,
-      initial: "YO"
-    }
-  
-    this.setData({
-      comments: [newItem, ...this.data.comments],
-      newComment: ""
-    })
-  },
-  
-  onToggleFavorite() {
-    this.setData({
-      isFavorite: !this.data.isFavorite
-    })
+    comments: [],
+    commentsLoading: false,
+    commentsError: "",
+    commentSortBy: "time",
+    newComment: "",
+    isFavorite: false,
+    isCommentSubmitting: false,
   },
 
   onLoad(options) {
@@ -73,18 +71,38 @@ Page({
       return;
     }
     this.setData({ paperId });
-    this.fetchPaperDetail(paperId);
+    this.reloadPageData();
   },
 
   onPullDownRefresh() {
-    if (!this.data.paperId) {
-      wx.stopPullDownRefresh();
-      return;
-    }
-    this.fetchPaperDetail(this.data.paperId, { stopPullDown: true });
+    this.reloadPageData({ stopPullDown: true });
   },
 
-  async fetchPaperDetail(paperId, options = {}) {
+  handleAuthError(err) {
+    if (err.statusCode === 401 || err.message === "missing_token") {
+      wx.removeStorageSync("token");
+      wx.removeStorageSync("user");
+      wx.reLaunch({ url: "/pages/login/login" });
+      return true;
+    }
+    return false;
+  },
+
+  async reloadPageData(options = {}) {
+    const paperId = this.data.paperId;
+    if (!paperId) return;
+
+    await Promise.all([
+      this.fetchPaperDetail(paperId),
+      this.fetchComments(),
+    ]);
+
+    if (options.stopPullDown) {
+      wx.stopPullDownRefresh();
+    }
+  },
+
+  async fetchPaperDetail(paperId) {
     this.setData({ isLoading: true, errorMsg: "" });
     try {
       const resp = await request({
@@ -110,21 +128,124 @@ Page({
       };
       this.setData({ paper });
     } catch (err) {
-      if (err.statusCode === 401 || err.message === "missing_token") {
-        wx.removeStorageSync("token");
-        wx.removeStorageSync("user");
-        wx.reLaunch({ url: "/pages/login/login" });
-        return;
-      }
+      if (this.handleAuthError(err)) return;
       this.setData({
         errorMsg: "获取论文详情失败，请稍后重试",
       });
     } finally {
       this.setData({ isLoading: false });
-      if (options.stopPullDown) {
-        wx.stopPullDownRefresh();
+    }
+  },
+
+  async fetchComments() {
+    const paperId = this.data.paperId;
+    if (!paperId) return;
+
+    this.setData({
+      commentsLoading: true,
+      commentsError: "",
+    });
+
+    try {
+      const resp = await request({
+        url: `/papers/${encodeURIComponent(paperId)}/comments?sortBy=${encodeURIComponent(
+          this.data.commentSortBy
+        )}&order=desc&page=1&pageSize=50`,
+        method: "GET",
+        auth: true,
+      });
+      const comments = Array.isArray(resp.items) ? resp.items.map(normalizeComment) : [];
+      this.setData({ comments });
+    } catch (err) {
+      if (this.handleAuthError(err)) return;
+      this.setData({
+        commentsError: "加载评论失败，请稍后重试",
+      });
+    } finally {
+      this.setData({
+        commentsLoading: false,
+      });
+    }
+  },
+
+  onInputComment(e) {
+    this.setData({
+      newComment: e.detail.value,
+    });
+  },
+
+  async onSendComment() {
+    const paperId = this.data.paperId;
+    const content = String(this.data.newComment || "").trim();
+    if (!paperId || !content || this.data.isCommentSubmitting) return;
+
+    this.setData({ isCommentSubmitting: true });
+    try {
+      await request({
+        url: `/papers/${encodeURIComponent(paperId)}/comments`,
+        method: "POST",
+        data: { content },
+        auth: true,
+      });
+
+      this.setData({ newComment: "" });
+      await this.fetchComments();
+    } catch (err) {
+      if (!this.handleAuthError(err)) {
+        wx.showToast({
+          title: "评论发送失败",
+          icon: "none",
+        });
+      }
+    } finally {
+      this.setData({ isCommentSubmitting: false });
+    }
+  },
+
+  async onToggleCommentLike(e) {
+    const paperId = this.data.paperId;
+    const commentId = e.currentTarget?.dataset?.id;
+    if (!paperId || !commentId) return;
+
+    try {
+      const resp = await request({
+        url: `/papers/${encodeURIComponent(paperId)}/comments/${encodeURIComponent(
+          commentId
+        )}/like`,
+        method: "POST",
+        auth: true,
+      });
+      const comments = (this.data.comments || []).map((item) => {
+        if (item.id !== commentId) return item;
+        return {
+          ...item,
+          likedByMe: Boolean(resp.liked),
+          likeCount: Number(resp.likeCount || 0),
+        };
+      });
+      this.setData({ comments });
+    } catch (err) {
+      if (!this.handleAuthError(err)) {
+        wx.showToast({
+          title: "操作失败",
+          icon: "none",
+        });
       }
     }
+  },
+
+  onChangeCommentSort(e) {
+    const sortBy = String(e.currentTarget?.dataset?.sort || "").trim();
+    if (!sortBy || sortBy === this.data.commentSortBy) return;
+    if (sortBy !== "time" && sortBy !== "likes") return;
+    this.setData({ commentSortBy: sortBy });
+    this.fetchComments();
+  },
+
+  onToggleFavorite() {
+    this.setData({
+      isFavorite: !this.data.isFavorite,
+    });
   },
 
   onCopyLink() {

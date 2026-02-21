@@ -53,6 +53,7 @@ model User {
   preference  UserPreference?
   paperAction UserPaperAction[]
   comments    Comment[]
+  commentLikes CommentLike[]
   missions    Mission[]
   aiJobs      AiJob[]
   badges      UserBadge[]
@@ -126,13 +127,28 @@ model Comment {
   userId    String        @map("user_id")
   content   String
   status    CommentStatus @default(VISIBLE)
+  likeCount Int           @default(0) @map("like_count")
   createdAt DateTime      @default(now()) @map("created_at")
   updatedAt DateTime      @updatedAt @map("updated_at")
   paper     Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes     CommentLike[]
 
   @@index([paperId, createdAt], map: "idx_comments_paper_created_at")
   @@map("comments")
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId], map: "uq_comment_likes_comment_user")
+  @@index([commentId], map: "idx_comment_likes_comment_id")
+  @@map("comment_likes")
 }
 
 model Conference {

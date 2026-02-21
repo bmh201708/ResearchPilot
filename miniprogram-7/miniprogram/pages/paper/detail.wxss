@@ -202,12 +202,12 @@ page {
     margin-bottom: 160rpx; /* 给底部输入栏留空间 */
   }
   
-  .discussion-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20rpx;
-  }
+.discussion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
   
   .discussion-title {
     font-size: 30rpx;
@@ -215,10 +215,35 @@ page {
     color: #111827;
   }
   
-  .view-all {
-    font-size: 22rpx;
-    color: #9ca3af;
-  }
+.comment-sort-group {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.sort-chip {
+  font-size: 20rpx;
+  color: #6b7280;
+  background: #eef2ff;
+  border-radius: 999rpx;
+  padding: 8rpx 20rpx;
+  font-weight: 600;
+}
+
+.sort-chip.active {
+  color: #ffffff;
+  background: #1e40af;
+}
+
+.comment-state {
+  font-size: 22rpx;
+  color: #6b7280;
+  padding: 20rpx 8rpx;
+}
+
+.comment-state-error {
+  color: #b91c1c;
+}
   
   .comment-card {
     display: flex;
@@ -264,11 +289,30 @@ page {
     color: #9ca3af;
   }
   
-  .comment-text {
-    font-size: 24rpx;
-    color: #374151;
-    line-height: 1.6;
-  }
+.comment-text {
+  font-size: 24rpx;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.comment-actions {
+  display: flex;
+  margin-top: 14rpx;
+}
+
+.comment-like-btn {
+  font-size: 20rpx;
+  color: #6b7280;
+  background: #f3f4f6;
+  border-radius: 999rpx;
+  padding: 6rpx 16rpx;
+}
+
+.comment-like-btn.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+}
 
   /* --- 6. 底部输入栏 --- */
 
