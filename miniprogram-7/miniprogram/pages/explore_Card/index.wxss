@@ -268,6 +268,24 @@ page {
     font-weight: 700;
     color: #ff85a1;
   }
+
+  .paper-like-btn {
+    margin-bottom: 16rpx;
+    background: #f6f7fb;
+    color: #39485d;
+    height: 72rpx;
+    border-radius: 20rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22rpx;
+    font-weight: 700;
+  }
+
+  .paper-like-btn.active {
+    background: #ffdce7;
+    color: #c91f5d;
+  }
   
   .full-summary-btn {
     background: #6366f1;
@@ -356,5 +374,4 @@ page {
     color: #333;
     line-height: 1.4;
   }
-
 

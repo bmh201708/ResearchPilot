@@ -245,6 +245,11 @@ page {
     box-shadow: 0 15rpx 30rpx rgba(0,0,0,0.05);
     position: relative;
   }
+
+  .paper-list {
+    display: flex;
+    flex-direction: column;
+  }
   
   .orange-dot {
     position: absolute;
@@ -267,6 +272,17 @@ page {
     color: #fff;
     flex-shrink: 0;
   }
+
+  .paper-icon-text {
+    font-size: 24rpx;
+    font-weight: 800;
+    letter-spacing: 1rpx;
+  }
+
+  .paper-info {
+    flex: 1;
+    min-width: 0;
+  }
   
   .bg-indigo-gradient { background: linear-gradient(135deg, #4F46E5, #818CF8); }
   .bg-teal-gradient { background: linear-gradient(135deg, #2DD4BF, #5EEAD4); }
@@ -276,6 +292,11 @@ page {
     font-size: 32rpx;
     font-weight: 800;
     display: block;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
   
   .paper-desc {
@@ -283,11 +304,17 @@ page {
     color: #888;
     margin: 10rpx 0;
     display: block;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
   }
   
   .tag-group {
     display: flex;
     gap: 15rpx;
+    flex-wrap: wrap;
   }
   
   .tag {
@@ -297,6 +324,19 @@ page {
     font-weight: 800;
     padding: 4rpx 12rpx;
     border-radius: 8rpx;
+  }
+
+  .paper-state {
+    background: #ffffff;
+    border-radius: 28rpx;
+    padding: 24rpx;
+    color: #777;
+    text-align: center;
+    font-size: 24rpx;
+  }
+
+  .paper-state-error {
+    color: #cc4b4b;
   }
 
   /* Icon 图片通用尺寸 */

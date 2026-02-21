@@ -996,6 +996,20 @@ async function getUserActionsByPaperIds(userId, paperIds) {
   return new Map(result.rows.map((row) => [row.paper_id, row.action]));
 }
 
+async function getUserLikedPaperIds(userId, paperIds) {
+  if (!paperIds.length) return new Set();
+  const result = await pool.query(
+    `
+      SELECT paper_id
+      FROM paper_likes
+      WHERE user_id = $1
+        AND paper_id = ANY($2::text[]);
+    `,
+    [userId, paperIds]
+  );
+  return new Set(result.rows.map((row) => row.paper_id));
+}
+
 async function loadLocalFeed({ userId, page, pageSize }) {
   const offset = (page - 1) * pageSize;
   const [countResult, feedResult] = await Promise.all([
@@ -1014,7 +1028,13 @@ async function loadLocalFeed({ userId, page, pageSize }) {
           ps.summary_method,
           ps.summary_contrib,
           ps.model_name,
-          upa.action AS user_action
+          upa.action AS user_action,
+          EXISTS (
+            SELECT 1
+            FROM paper_likes pl
+            WHERE pl.paper_id = p.id
+              AND pl.user_id = $1
+          ) AS liked_by_me
         FROM papers p
         LEFT JOIN paper_summaries ps
           ON ps.paper_id = p.id
@@ -1037,6 +1057,7 @@ async function loadLocalFeed({ userId, page, pageSize }) {
     publishedAt: row.published_at,
     tags: row.tags || [],
     userAction: row.user_action || null,
+    likedByMe: Boolean(row.liked_by_me),
     summary:
       row.summary_bg || row.summary_method || row.summary_contrib
         ? {
@@ -1540,6 +1561,72 @@ app.get("/users/me", authMiddleware, async (req, res) => {
   });
 });
 
+app.get("/users/me/liked-papers", authMiddleware, async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page, 1, 1000000);
+    const pageSize = parsePositiveInt(req.query.pageSize, 20, 100);
+    const offset = (page - 1) * pageSize;
+
+    const [countResult, listResult] = await Promise.all([
+      pool.query(
+        `
+          SELECT COUNT(*)::int AS total
+          FROM paper_likes
+          WHERE user_id = $1;
+        `,
+        [req.auth.userId]
+      ),
+      pool.query(
+        `
+          SELECT
+            p.id,
+            p.arxiv_id,
+            p.title,
+            p.authors,
+            p.abstract,
+            p.published_at,
+            p.tags,
+            pl.created_at AS liked_at
+          FROM paper_likes pl
+          INNER JOIN papers p ON p.id = pl.paper_id
+          WHERE pl.user_id = $1
+          ORDER BY pl.created_at DESC
+          LIMIT $2 OFFSET $3;
+        `,
+        [req.auth.userId, pageSize, offset]
+      ),
+    ]);
+
+    const total = countResult.rows[0]?.total ?? 0;
+    const items = listResult.rows.map((row) => ({
+      id: row.id,
+      arxivId: row.arxiv_id,
+      title: row.title,
+      authors: row.authors || [],
+      abstract: row.abstract || "",
+      publishedAt: row.published_at,
+      tags: row.tags || [],
+      likedAt: row.liked_at,
+      likedByMe: true,
+    }));
+
+    return res.status(200).json({
+      items,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        hasMore: offset + items.length < total,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "liked_papers_list_failed",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
 app.get("/projects/conferences", authMiddleware, async (req, res) => {
   try {
     await seedDefaultProjectDeadlines(req.auth.userId);
@@ -1764,10 +1851,11 @@ app.get("/papers/feed", authMiddleware, async (req, res) => {
       const openAlexPapers = openAlexResult.rows.map(mapOpenAlexPaper).filter(Boolean);
 
       await upsertPapersFromSemanticScholar(openAlexPapers);
-      const userActionMap = await getUserActionsByPaperIds(
-        req.auth.userId,
-        openAlexPapers.map((paper) => paper.id)
-      );
+      const paperIds = openAlexPapers.map((paper) => paper.id);
+      const [userActionMap, likedPaperIds] = await Promise.all([
+        getUserActionsByPaperIds(req.auth.userId, paperIds),
+        getUserLikedPaperIds(req.auth.userId, paperIds),
+      ]);
 
       const items = openAlexPapers.map((paper) => ({
         id: paper.id,
@@ -1778,6 +1866,7 @@ app.get("/papers/feed", authMiddleware, async (req, res) => {
         publishedAt: paper.publishedAt,
         tags: paper.tags,
         userAction: userActionMap.get(paper.id) || null,
+        likedByMe: likedPaperIds.has(paper.id),
         summary: null,
         source: "openalex",
         semanticProvider: "openalex",
@@ -1883,6 +1972,114 @@ app.post("/papers/:id/action", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/papers/:id/like", authMiddleware, async (req, res) => {
+  try {
+    const paperId = String(req.params.id || "").trim();
+    if (!paperId) {
+      return res.status(400).json({ message: "invalid_paper_id" });
+    }
+    const desiredLike =
+      typeof req.body?.liked === "boolean" ? Boolean(req.body.liked) : null;
+
+    const paperResult = await pool.query(
+      `
+        SELECT id
+        FROM papers
+        WHERE id = $1
+        LIMIT 1;
+      `,
+      [paperId]
+    );
+    if (!paperResult.rows[0]) {
+      return res.status(404).json({ message: "paper_not_found" });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      let liked = false;
+
+      if (desiredLike === true) {
+        await client.query(
+          `
+            INSERT INTO paper_likes (id, user_id, paper_id)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id, paper_id) DO NOTHING;
+          `,
+          [crypto.randomUUID(), req.auth.userId, paperId]
+        );
+        liked = true;
+      } else if (desiredLike === false) {
+        await client.query(
+          `
+            DELETE FROM paper_likes
+            WHERE user_id = $1
+              AND paper_id = $2;
+          `,
+          [req.auth.userId, paperId]
+        );
+        liked = false;
+      } else {
+        const insertResult = await client.query(
+          `
+            INSERT INTO paper_likes (id, user_id, paper_id)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (user_id, paper_id) DO NOTHING
+            RETURNING id;
+          `,
+          [crypto.randomUUID(), req.auth.userId, paperId]
+        );
+        if (insertResult.rows[0]) {
+          liked = true;
+        } else {
+          await client.query(
+            `
+              DELETE FROM paper_likes
+              WHERE user_id = $1
+                AND paper_id = $2;
+            `,
+            [req.auth.userId, paperId]
+          );
+          liked = false;
+        }
+      }
+
+      const likedAtResult = liked
+        ? await client.query(
+            `
+              SELECT created_at
+              FROM paper_likes
+              WHERE user_id = $1
+                AND paper_id = $2
+              LIMIT 1;
+            `,
+            [req.auth.userId, paperId]
+          )
+        : null;
+
+      await client.query("COMMIT");
+      return res.status(200).json({
+        paperId,
+        liked,
+        likedAt: likedAtResult?.rows?.[0]?.created_at || null,
+      });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      return res.status(500).json({
+        message: "paper_like_failed",
+        detail: String(err?.message || err),
+      });
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    return res.status(500).json({
+      message: "paper_like_failed",
+      detail: String(err?.message || err),
+    });
+  }
+});
+
 app.get("/papers/:id", authMiddleware, async (req, res) => {
   try {
     const paperId = String(req.params.id || "");
@@ -1904,7 +2101,13 @@ app.get("/papers/:id", authMiddleware, async (req, res) => {
           ps.summary_method,
           ps.summary_contrib,
           ps.model_name,
-          upa.action AS user_action
+          upa.action AS user_action,
+          EXISTS (
+            SELECT 1
+            FROM paper_likes pl
+            WHERE pl.paper_id = p.id
+              AND pl.user_id = $2
+          ) AS liked_by_me
         FROM papers p
         LEFT JOIN paper_summaries ps
           ON ps.paper_id = p.id
@@ -1950,6 +2153,7 @@ app.get("/papers/:id", authMiddleware, async (req, res) => {
       publishedAt: row.published_at,
       tags: row.tags || [],
       userAction: row.user_action || null,
+      likedByMe: Boolean(row.liked_by_me),
       citationCount: Number.isFinite(detailData?.cited_by_count)
         ? detailData.cited_by_count
         : 0,

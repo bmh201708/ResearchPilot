@@ -58,6 +58,7 @@ Page({
     commentSortBy: "time",
     newComment: "",
     isFavorite: false,
+    isFavoriteSubmitting: false,
     isCommentSubmitting: false,
   },
 
@@ -126,7 +127,10 @@ Page({
         citationCount: resp.citationCount || 0,
         link: resp.link || "",
       };
-      this.setData({ paper });
+      this.setData({
+        paper,
+        isFavorite: Boolean(resp.likedByMe),
+      });
     } catch (err) {
       if (this.handleAuthError(err)) return;
       this.setData({
@@ -242,10 +246,34 @@ Page({
     this.fetchComments();
   },
 
-  onToggleFavorite() {
-    this.setData({
-      isFavorite: !this.data.isFavorite,
-    });
+  async onToggleFavorite() {
+    const paperId = this.data.paperId;
+    if (!paperId || this.data.isFavoriteSubmitting) return;
+
+    const targetLiked = !this.data.isFavorite;
+    this.setData({ isFavoriteSubmitting: true });
+    try {
+      const resp = await request({
+        url: `/papers/${encodeURIComponent(paperId)}/like`,
+        method: "POST",
+        data: {
+          liked: targetLiked,
+        },
+        auth: true,
+      });
+      this.setData({
+        isFavorite: Boolean(resp.liked),
+      });
+    } catch (err) {
+      if (!this.handleAuthError(err)) {
+        wx.showToast({
+          title: "收藏操作失败",
+          icon: "none",
+        });
+      }
+    } finally {
+      this.setData({ isFavoriteSubmitting: false });
+    }
   },
 
   onCopyLink() {

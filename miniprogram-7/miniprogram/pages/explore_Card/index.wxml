@@ -66,6 +66,15 @@
               </view>
             </view>
 
+            <view
+              class="paper-like-btn {{item.likedByMe ? 'active' : ''}}"
+              data-id="{{item.id}}"
+              data-liked="{{item.likedByMe}}"
+              catchtap="onTogglePaperLike"
+            >
+              {{item.likedByMe ? '已点赞，进入收藏' : '点赞收藏'}}
+            </view>
+
             <view class="full-summary-btn" catchtap="onPaperTap" data-id="{{item.id}}">
               <text>OPEN DETAIL</text>
               <text class="arrow">↗</text>

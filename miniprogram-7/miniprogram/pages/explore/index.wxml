@@ -50,7 +50,17 @@
           <view class="card-abstract">{{item.abstractShort}}</view>
           <view class="card-footer">
             <text class="author-text">{{item.authorsText}}</text>
-            <text class="time-text">{{item.citationText}}</text>
+            <view class="meta-right">
+              <text class="time-text">{{item.citationText}}</text>
+              <view
+                class="paper-like-btn {{item.likedByMe ? 'active' : ''}}"
+                data-id="{{item.id}}"
+                data-liked="{{item.likedByMe}}"
+                catchtap="onTogglePaperLike"
+              >
+                {{item.likedByMe ? '已赞' : '点赞'}}
+              </view>
+            </view>
           </view>
         </view>
       </view>
@@ -64,7 +74,17 @@
           <view class="card-abstract">{{item.abstractShort}}</view>
           <view class="card-footer">
             <text class="author-text">{{item.authorsText}}</text>
-            <text class="time-text">{{item.citationText}}</text>
+            <view class="meta-right">
+              <text class="time-text">{{item.citationText}}</text>
+              <view
+                class="paper-like-btn {{item.likedByMe ? 'active' : ''}}"
+                data-id="{{item.id}}"
+                data-liked="{{item.likedByMe}}"
+                catchtap="onTogglePaperLike"
+              >
+                {{item.likedByMe ? '已赞' : '点赞'}}
+              </view>
+            </view>
           </view>
         </view>
       </view>

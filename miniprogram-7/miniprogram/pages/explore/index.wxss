@@ -203,7 +203,7 @@ page {
         margin-top: 20rpx;
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-end;
         width: 100%;
       }
       
@@ -223,6 +223,29 @@ page {
   .avt-1 { background: #1a1b2e; }
   .avt-2 { background: #ddd; margin-left: -10rpx; }
   .time-text { font-size: 20rpx; color: #999; }
+
+  .meta-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10rpx;
+  }
+
+  .paper-like-btn {
+    min-width: 84rpx;
+    text-align: center;
+    background: #eef2f7;
+    color: #4a596d;
+    font-size: 20rpx;
+    font-weight: 700;
+    padding: 6rpx 16rpx;
+    border-radius: 20rpx;
+  }
+
+  .paper-like-btn.active {
+    background: #ffdce7;
+    color: #cc2f63;
+  }
   
   /* Quote Card Specifics */
   .quote-box {

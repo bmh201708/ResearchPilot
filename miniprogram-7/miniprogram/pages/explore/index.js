@@ -25,7 +25,16 @@ function normalizePaper(item) {
     yearText: item.year ? `${item.year}` : "Latest",
     citationText: `Citations ${item.citationCount || 0}`,
     source: item.source || "semantic_scholar",
+    likedByMe: Boolean(item.likedByMe),
   };
+}
+
+function parseDatasetBoolean(value) {
+  if (value === true || value === false) return value;
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "true" || normalized === "1") return true;
+  if (normalized === "false" || normalized === "0" || normalized === "") return false;
+  return Boolean(value);
 }
 
 Page({
@@ -38,6 +47,7 @@ Page({
     isLoading: false,
     errorMsg: "",
     source: "",
+    likeSubmittingId: "",
   },
 
   onLoad() {
@@ -129,5 +139,53 @@ Page({
         console.error("跳转详情页失败:", err);
       },
     });
+  },
+
+  updatePaperLikeState(paperId, likedByMe) {
+    const papers = (this.data.papers || []).map((item) => {
+      if (item.id !== paperId) return item;
+      return {
+        ...item,
+        likedByMe: Boolean(likedByMe),
+      };
+    });
+    const columns = splitColumns(papers);
+    this.setData({
+      papers,
+      leftPapers: columns.left,
+      rightPapers: columns.right,
+    });
+  },
+
+  async onTogglePaperLike(e) {
+    const paperId = String(e.currentTarget?.dataset?.id || "").trim();
+    const likedByMe = parseDatasetBoolean(e.currentTarget?.dataset?.liked);
+    if (!paperId || this.data.likeSubmittingId === paperId) return;
+
+    this.setData({ likeSubmittingId: paperId });
+    try {
+      const resp = await request({
+        url: `/papers/${encodeURIComponent(paperId)}/like`,
+        method: "POST",
+        data: {
+          liked: !likedByMe,
+        },
+        auth: true,
+      });
+      this.updatePaperLikeState(paperId, Boolean(resp.liked));
+    } catch (err) {
+      if (err.statusCode === 401 || err.message === "missing_token") {
+        wx.removeStorageSync("token");
+        wx.removeStorageSync("user");
+        wx.reLaunch({ url: "/pages/login/login" });
+        return;
+      }
+      wx.showToast({
+        title: "点赞失败，请重试",
+        icon: "none",
+      });
+    } finally {
+      this.setData({ likeSubmittingId: "" });
+    }
   },
 });

@@ -54,6 +54,7 @@ model User {
   paperAction UserPaperAction[]
   comments    Comment[]
   commentLikes CommentLike[]
+  paperLikes  PaperLike[]
   missions    Mission[]
   aiJobs      AiJob[]
   badges      UserBadge[]
@@ -87,9 +88,24 @@ model Paper {
   summary     PaperSummary?
   actions     UserPaperAction[]
   comments    Comment[]
+  likes       PaperLike[]
 
   @@index([publishedAt], map: "idx_papers_published_at")
   @@map("papers")
+}
+
+model PaperLike {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  paperId   String   @map("paper_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paper     Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, paperId], map: "uq_paper_likes_user_paper")
+  @@index([userId, createdAt], map: "idx_paper_likes_user_created_at")
+  @@index([paperId], map: "idx_paper_likes_paper_id")
+  @@map("paper_likes")
 }
 
 model PaperSummary {

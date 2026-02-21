@@ -66,50 +66,31 @@
 
   <view class="papers-section">
     <view class="section-header">
-      <text class="section-title">Collected Papers</text>
-      <view class="see-all">See All</view>
+      <text class="section-title">Collected Papers ({{collectedPapers.length}})</text>
+      <view class="see-all">Liked</view>
     </view>
 
-    <view class="paper-list">
-      <view class="paper-card">
+    <view wx:if="{{collectedLoading}}" class="paper-state">正在加载收藏论文...</view>
+    <view wx:elif="{{collectedError}}" class="paper-state paper-state-error">{{collectedError}}</view>
+    <view wx:elif="{{!collectedPapers.length}}" class="paper-state">暂无收藏论文，去 Explore 点赞试试</view>
+
+    <view wx:else class="paper-list">
+      <view
+        class="paper-card"
+        wx:for="{{collectedPapers}}"
+        wx:key="id"
+        bindtap="onCollectedPaperTap"
+        data-id="{{item.id}}"
+      >
         <view class="orange-dot"></view>
-        <view class="paper-icon bg-indigo-gradient">
-            <image class="icon-img" src="/images/profile/subject_1.png" mode="aspectFit"></image> 
+        <view class="paper-icon {{item.iconClass}}">
+          <text class="paper-icon-text">{{item.iconText}}</text>
         </view>
         <view class="paper-info">
-          <text class="paper-title">Human-AI Symbiosis</text>
-          <text class="paper-desc">Exploring collaborative patterns in generative design workflows.</text>
+          <text class="paper-title">{{item.title}}</text>
+          <text class="paper-desc">{{item.description}}</text>
           <view class="tag-group">
-            <text class="tag">HCI</text>
-            <text class="tag">2024</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="paper-card">
-        <view class="paper-icon bg-teal-gradient">
-            <image class="icon-img" src="/images/profile/subject_2.png" mode="aspectFit"></image> 
-        </view>
-        <view class="paper-info">
-          <text class="paper-title">Cognitive Load in AR</text>
-          <text class="paper-desc">Reducing friction in spatial computing interfaces for education.</text>
-          <view class="tag-group">
-            <text class="tag">UX</text>
-            <text class="tag">PRE-PRINT</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="paper-card">
-        <view class="paper-icon bg-pink-gradient">
-            <image class="icon-img" src="/images/profile/subject_3.png" mode="aspectFit"></image> 
-        </view>
-        <view class="paper-info">
-          <text class="paper-title">Visual Syntax Theory</text>
-          <text class="paper-desc">A structural analysis of modern UI design languages.</text>
-          <view class="tag-group">
-            <text class="tag">DESIGN</text>
-            <text class="tag">2023</text>
+            <text class="tag" wx:for="{{item.tags}}" wx:for-item="tagItem" wx:key="index">{{tagItem}}</text>
           </view>
         </view>
       </view>
